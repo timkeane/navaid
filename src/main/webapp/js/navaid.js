@@ -15,8 +15,8 @@ tk.NavAid = function(options){
   this.getNamedFeatures();
   this.firstRun = false;
   this.startingZoomLevel = options.startingZoomLevel || 14;
+  this.on(nyc.ol.Tracker.EventType.UPDATED, this.updateCurrentTrack, this);
   this.setTracking(true);
-  this.on(nyc.ol.Tracker.UPDATED, this.updateCurrentTrack, this);
 
   var trackIdx = this.storage.getItem('navaid-track-index') || 0;
   trackIdx = (trackIdx * 1) + 1;
@@ -32,38 +32,84 @@ tk.NavAid = function(options){
   $('body').append(this.navBtn).trigger('create');
   this.navBtn.click($.proxy(this.toggleNav, this));
 
+  this.dash = $(tk.NavAid.DASH_HTML);
+  $('body').append(this.dash).trigger('create');
+
   this.source = new ol.source.Vector();
-  this.map.addLayer(new ol.layer.Vector({source: this.source}));
+  this.map.addLayer(
+    new ol.layer.Vector({
+      source: this.source,
+      style: [
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'yellow',
+            width: 4
+          })
+        }),
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 2
+          })
+        })
+      ]
+    })
+);
 
   this.map.on('click', this.featureInfo, this);
 };
 
-tk.NavAid.prototype.navigate = function(event){
+tk.NavAid.prototype.updateDash = function(){
+  var feature = this.navFeature;
+  var speed = this.getSpeed() || 0;
+  var bearing = ((this.getHeading() || 0) * 180 / Math.PI) + '&deg;';
+  var distance = feature ? feature.getGeometry().getLength() : 0;
+  var arrival = feature ? this.remainingTime(distance, speed) : '';
+  speed = (speed * 3.6 * 0.621371).toFixed(2) + ' mph';
+  $('#speed span').html(speed);
+  $('#heading span').html(bearing);
+  $('#arrival span').html(arrival)[arrival ? 'show' : 'hide']();
+};
+
+tk.NavAid.prototype.remainingTime = function(distance, speed){
+  if (distance && speed){
+    var seconds = distance / speed;
+    var hr = Math.floor(seconds / 3600);
+  	var min = Math.floor((seconds - (hr * 3600))/60);
+  	var sec = Math.floor(seconds - (hr * 3600) - (min * 60));
+  	if (hr < 10){
+      hr = '0' + hr;
+    }
+  	if (min < 10){
+      min = '0' + min;
+    }
+  	if (sec < 10){
+      sec = '0' + sec;
+    }
+  	return hr + ':' + min + ':' + sec;
+  }
+  return '';
+};
+
+tk.NavAid.prototype.navigate = function(){
+  var origin = this.getPosition();
+  var geom = this.navFeature.getGeometry();
+  var destination = geom.getLastCoordinate();
+  geom.setCoordinates([origin, destination]);
+};
+
+tk.NavAid.prototype.beginNavigation = function(event){
   var feature = $(event.target).data('feature');
   var origin = this.getPosition();
   var destination = this.center(feature);
-  var feature = new ol.Feature({
+  this.navFeature = new ol.Feature({
     geometry: new ol.geom.LineString([origin, destination]),
   });
-  var style = [
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'yellow',
-        width: 4
-      })
-    }),
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'red',
-        width: 2
-      })
-    })
-  ];
-  feature.setStyle(style);
-  this.source.clear();
   this.navList.slideToggle();
-  this.source.addFeature(feature);
+  this.source.addFeature(this.navFeature);
+  this.on(nyc.ol.Tracker.UPDATED, this.navigate, this);
 };
+
 tk.NavAid.prototype.toggleNav = function(){
   var me = this, btn = me.navBtn;
   if (btn.hasClass('stop')){
@@ -72,6 +118,7 @@ tk.NavAid.prototype.toggleNav = function(){
       callback: function(yesNo){
         if (yesNo){
           me.source.clear();
+          me.un(nyc.ol.Tracker.UPDATED, me.navigate, me);
           btn.toggleClass('stop');
         }
       }
@@ -101,7 +148,7 @@ if (!me.navList){
       var feature = me.namedFeatures[name];
       var a = $('<a data-role="button">' + name + '</a>');
       a.data('feature', feature);
-      a.click($.proxy(me.navigate, me));
+      a.click($.proxy(me.beginNavigation, me));
       div.append(a).trigger('create');
     }
   });
@@ -170,6 +217,7 @@ tk.NavAid.prototype.getNamedFeatures = function(){
 
 tk.NavAid.prototype.updateCurrentTrack = function(){
   this.trackFeature.setGeometry(this.track);
+  this.updateDash();
 };
 
 tk.NavAid.prototype.waypoint = function(event){
@@ -220,4 +268,10 @@ tk.NavAid.NAV_HTML = '<div class="nav-list ui-page-theme-a">' +
     '<input id="named-feature" data-type="search">' +
   '</form>' +
   '<div class="nav-features" data-role="controlgroup" data-filter="true" data-input="#named-feature"></div>' +
+'</div>';
+
+tk.NavAid.DASH_HTML = '<div class="nav-dash">' +
+  '<div id="speed"><span></span></div>' +
+  '<div id="heading"><span></span></div>' +
+  '<div id="arrival"><span></span></div>' +
 '</div>';
