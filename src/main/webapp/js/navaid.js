@@ -6,7 +6,35 @@ tk.NavAid = function(options){
   this.draw = new nyc.ol.Draw({
     map: this.map,
     restore: false,
-    showEveryTrackPositon: false
+    showEveryTrackPositon: false,
+    style: [
+			new ol.style.Style({
+				fill: new ol.style.Fill({
+					color: 'rgba(255,255,255,.2)'
+				}),
+				zIndex: 0
+			}),
+			new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: 'red',
+					width: 3
+				}),
+				zIndex: 200
+			}),
+			new ol.style.Style({
+				image: new ol.style.Circle({
+					radius: 4,
+					fill: new ol.style.Fill({
+						color: 'red'
+					}),
+          stroke: new ol.style.Stroke({
+            color: '#fff',
+            width: 2
+          })
+				}),
+				zIndex: 300
+			})
+		]
   });
   this.draw.on(nyc.ol.FeatureEventType.ADD, this.nameFeature, this);
 
