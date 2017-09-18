@@ -59,6 +59,12 @@ tk.NavAid = function(options){
   this.map.on('click', this.featureInfo, this);
 };
 
+tk.NavAid.prototype.updateView = function(position){
+  if (!$('.popup').is(':visible')){
+    nyc.ol.Tracker.prototype.updateView.call(this, position);
+  }
+};
+
 tk.NavAid.prototype.updateDash = function(){
   var feature = this.navFeature;
   var speed = this.getSpeed() || 0;
@@ -173,7 +179,7 @@ tk.NavAid.prototype.infoHtml = function(feature){
     var me = this, html = $('<div></div>');
     html.append('<div>' + me.dms(feature) + '</div>')
     if (name.indexOf('navaid-track') == 0){
-      var btn = $('<button>Add name...</button>');
+      var btn = $('<button>Name this track...</button>');
       btn.click(function(){
         me.nameFeature(feature);
       });

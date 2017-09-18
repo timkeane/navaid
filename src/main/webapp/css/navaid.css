@@ -113,3 +113,6 @@ div.nav-dash div {
 .nav-dash div.north-arrow {
   padding: 0;
 }
+.popup-content {
+  width: 220px;
+}
