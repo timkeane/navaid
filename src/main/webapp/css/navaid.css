@@ -1,0 +1,77 @@
+#map, div.nav-list {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.capture.ctl-btn.ui-btn, .nav.ctl-btn.ui-btn {
+  display: block;
+  left: 3px;
+  border-color: #ddd;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 22px;
+}
+.capture {
+  top: 3px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%3E%3Cg%20style%3D%22stroke%3A%23fff%3Bstroke-width%3A2%3Bfill%3Anone%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%227%22%20r%3D%225%22%2F%3E%3Cpolyline%20points%3D%220%2C7%204.5%2C7%22%2F%3E%3Cpolyline%20points%3D%229.5%2C7%2014%2C7%22%2F%3E%3Cpolyline%20points%3D%227%2C0%207%2C4.5%22%2F%3E%3Cpolyline%20points%3D%227%2C14%207%2C9.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+.nav {
+  top: 43px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Cpath%20style%3D%22fill%3A%23fff%3B%22%20d%3D%22M50%2010%20L%2070%2090%20L%2030%2090%20L%2050%2010%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%20style%3D%22fill%3Anone%3Bstroke%3A%23fff%3Bstroke-width%3A10%22%2F%3E%3C%2Fsvg%3E");
+}
+a.draw-btn.ui-btn, .draw-mnu-btn.ui-btn,
+.capture.ctl-btn.ui-btn, .capture.ctl-btn.ui-btn:visited,
+.nav.ctl-btn.ui-btn, .nav.ctl-btn.ui-btn:visited,
+a.popup-closer, a.popup-closer:visited {
+  background-color: rgba(0,132,202,.8);
+}
+a.draw-btn.ui-btn:hover, .draw-mnu-btn.ui-btn:hover,
+.capture.ctl-btn.ui-btn:hover,
+.nav.ctl-btn.ui-btn:hover,
+a.popup-closer:hover {
+  background-color: #0084ca;
+}
+div.north-arrow {
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Cpath%20style%3D%22opacity%3A.8%3Bfill%3A%230084ca%3Bstroke-width%3A5%3Bstroke%3A%23fff%22%20d%3D%22M50%2010%20L%2070%2090%20L%2030%2090%20L%2050%2010%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%20style%3D%22fill%3Anone%3Bstroke%3A%23fff%3Bstroke-width%3A20%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%20style%3D%22fill%3Anone%3Bopacity.8%3Bstroke%3A%230084ca%3Bstroke-width%3A10%22%2F%3E%3C%2Fsvg%3E");
+  background-color: #fff;
+}
+.square, .box, .save, .gps {
+  display: none;
+}
+.nav-list {
+    display: none;
+    z-index: 1000;
+    background-color: #fff;
+}
+.nav-list div {
+  margin: 5px;
+}
+.nav-list .ui-input-search {
+  width: calc(100% - 142px);
+  height: 36px;
+}
+.nav-list .ui-input-search .ui-btn.ui-input-clear {
+  margin-top: -11px;
+  width: 0;
+  height: 0;
+  padding: 11px;
+  background-position: center;
+}
+.nav-list a.cancel {
+    position: fixed;
+    margin: 0;
+    top: 5px;
+    right: 5px;
+    width: 80px;
+}
+.nav-features {
+  height: calc(100% - 55px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.nav-features a {
+  margin: 0 0 3px 0;
+}
