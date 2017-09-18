@@ -54,7 +54,7 @@ tk.NavAid = function(options){
         })
       ]
     })
-);
+  );
 
   this.map.on('click', this.featureInfo, this);
 };
