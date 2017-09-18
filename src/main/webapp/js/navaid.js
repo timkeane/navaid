@@ -248,6 +248,7 @@ tk.NavAid.prototype = {
     this.navFeature = new ol.Feature({
       geometry: new ol.geom.LineString([origin, destination]),
     });
+    this.navBtn.addClass('stop');
     this.navList.slideToggle();
     this.source.addFeature(this.navFeature);
     this.on(nyc.ol.Tracker.UPDATED, this.navigate, this);
@@ -265,13 +266,12 @@ tk.NavAid.prototype = {
           if (yesNo){
             me.source.clear();
             me.un(nyc.ol.Tracker.UPDATED, me.navigate, me);
-            btn.toggleClass('stop');
+            btn.removeClass('stop');
           }
         }
       });
     }else{
       me.showNavList();
-      btn.toggleClass('stop');
     }
   },
   /**
@@ -339,7 +339,7 @@ tk.NavAid.prototype = {
       if (name.indexOf('navaid-track') == 0){
         var btn = $('<button>Name this track...</button>');
         btn.click(function(){
-          me.nameFeature(feature);
+          me.nameFeature(feature, true);
         });
         html.append(btn);
       }else{
@@ -407,19 +407,20 @@ tk.NavAid.prototype = {
    * @private
    * @method
    * @param {ol.Feature} feature
+   * @param {boolean} replace
    */
-  nameFeature: function(feature){
+  nameFeature: function(feature, replace){
     var me = this;
     new nyc.Dialog().input({
       placeholder: 'Enter a name...',
       callback: function(name){
         if (!(name in me.namedFeatures)){
-          me.storeNamed(name, feature);
+          me.storeNamed(name, feature, replace);
         }else{
           new nyc.Dialog().ok({
-              message: name + ' is already assigned',
+              message: '<b>' + name + '</b> is already assigned',
               callback: function(){
-                me.nameFeature(feature);
+                me.nameFeature(feature, replace);
               }
           });
         }
@@ -431,15 +432,23 @@ tk.NavAid.prototype = {
    * @method
    * @param {string} name
    * @param {ol.Feature} feature
+   * @param {boolean} replace
    */
-  storeNamed: function(name, feature){
+  storeNamed: function(name, feature, replace){
+    if (replace){
+      var replacement = new ol.Feature(feature.getProperties());
+      this.draw.removeFeature(feature);
+      feature = repalcement;
+      delete me.namedFeatures[feature.get('name')];
+    }
     feature.set('name', name);
+    feature.setId(name);
     this.namedFeatures[name] = feature;
     this.namedGeoJson[name] = this.geoJson.writeFeature(feature, {
       featureProjection: this.view.getProjection()
     });
     this.storage.setItem(this.namedStore, JSON.stringify(this.namedGeoJson));
-    if ($.inArray(feature, this.draw.source.getFeatures()) == -1){
+    if (!this.draw.source.getFeatureById(name)){
       this.draw.addFeatures([feature]);
     }
   }
