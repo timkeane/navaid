@@ -22,10 +22,10 @@ tk.NavAid = function(options){
   this.initDraw();
   this.restoreNamedFeatures();
   this.initCurrentTrack();
-  //this.setTracking(true);
   this.setupControls();
   this.navSettings();
   this.navLayer();
+  this.setTracking(false);
   this.map.on('click', this.featureInfo, this);
 };
 
@@ -90,6 +90,23 @@ tk.NavAid.prototype = {
    * @member {ol.source.Vector}
    */
   source: null,
+  /**
+   * @desc Enable or disable tracking
+   * @public
+   * @override
+   * @method
+   * @param {boolean} tracking Whether or not to track position
+   */
+  setTracking: function(tracking){
+    if (tracking){
+      this.updateView = tk.NavAid.prototype.updateView;
+      nyc.ol.Tracker.prototype.setTracking.call(this, false);
+    }else{
+      this.updateView = function(){};
+    }
+    $('.pause-btn')[tracking ? 'addClass' : 'removeClass']('pause');
+    nyc.ol.Tracker.prototype.setTracking.call(this, true);
+  },
   /**
    * @desc Do not restore on load
    * @public
@@ -180,9 +197,11 @@ tk.NavAid.prototype = {
    * @param {JQueryEvent} event
    */
   playPause: function(event){
-    var btn = $(event.target);
-    this.setTracking(!btn.hasClass('pause'));
-    btn.toggleClass('pause');
+    var btn = $(event.target), tracking = !btn.hasClass('pause');
+    this.setTracking(tracking);
+    if (tracking){
+      this.draw.deactivate(true);
+    }
   },
   /**
    * @private
@@ -238,9 +257,9 @@ tk.NavAid.prototype = {
     me.draw.on(nyc.ol.FeatureEventType.ADD, me.nameFeature, me);
     me.draw.on(nyc.ol.FeatureEventType.CHANGE, me.changeFeature, me);
     me.draw.on(nyc.ol.FeatureEventType.REMOVE, me.removeFeature, me);
-    //me.draw.on(nyc.ol.Draw.EventType.ACTIVE_CHANGED, function(active){
-    //    me.setTracking(!active);
-    //});
+    me.draw.on(nyc.ol.Draw.EventType.ACTIVE_CHANGED, function(active){
+        me.setTracking(!active);
+    });
   },
   /**
    * @private

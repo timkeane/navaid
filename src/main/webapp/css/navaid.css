@@ -12,7 +12,7 @@ a.ctl-btn.ui-btn {
   background-size: 22px;
 }
 .waypoint {
-  left: 3px;
+  right: 3px;
   top: 3px;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%3E%3Cg%20style%3D%22stroke%3A%23fff%3Bstroke-width%3A2%3Bfill%3Anone%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%227%22%20r%3D%225%22%2F%3E%3Cpolyline%20points%3D%220%2C7%204.5%2C7%22%2F%3E%3Cpolyline%20points%3D%229.5%2C7%2014%2C7%22%2F%3E%3Cpolyline%20points%3D%227%2C0%207%2C4.5%22%2F%3E%3Cpolyline%20points%3D%227%2C14%207%2C9.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
 }
@@ -168,7 +168,7 @@ a.settings {
 }
 .pause-btn {
   top: 3px;
-  right: 3px;
+  left: 3px;
   background-size: 18px;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3Asvg%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Cpath%20style%3D%22fill%3A%23fff%22%20d%3D%22M0%200%20L%20100%2050%20L%200%20100%22%2F%3E%3C%2Fsvg%3E");
 }
