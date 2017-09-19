@@ -22,7 +22,7 @@ tk.NavAid = function(options){
   this.initDraw();
   this.restoreNamedFeatures();
   this.initCurrentTrack();
-  this.setTracking(true);
+  //this.setTracking(true);
   this.setupControls();
   this.navSettings();
   this.navLayer();
@@ -169,7 +169,20 @@ tk.NavAid.prototype = {
 
     $('body').append($(tk.NavAid.NAV_WARN_HTML)).trigger('create');
 
+    $('body').append($(tk.NavAid.PAUSE_HTML)).trigger('create');
+    $('a.pause-btn').click($.proxy(this.playPause, this));
+
     $('#navigation-settings input').change($.proxy(this.navSettings, this));
+  },
+  /**
+   * @private
+   * @method
+   * @param {JQueryEvent} event
+   */
+  playPause: function(event){
+    var btn = $(event.target);
+    this.setTracking(!btn.hasClass('pause'));
+    btn.toggleClass('pause');
   },
   /**
    * @private
@@ -188,8 +201,9 @@ tk.NavAid.prototype = {
    * @method
    */
   initDraw: function(){
-    this.draw = new nyc.ol.Draw({
-      map: this.map,
+    var me = this;
+    me.draw = new nyc.ol.Draw({
+      map: me.map,
       restore: false,
       showEveryTrackPositon: false,
       style: [
@@ -221,9 +235,12 @@ tk.NavAid.prototype = {
   			})
   		]
     });
-    this.draw.on(nyc.ol.FeatureEventType.ADD, this.nameFeature, this);
-    this.draw.on(nyc.ol.FeatureEventType.CHANGE, this.changeFeature, this);
-    this.draw.on(nyc.ol.FeatureEventType.REMOVE, this.removeFeature, this);
+    me.draw.on(nyc.ol.FeatureEventType.ADD, me.nameFeature, me);
+    me.draw.on(nyc.ol.FeatureEventType.CHANGE, me.changeFeature, me);
+    me.draw.on(nyc.ol.FeatureEventType.REMOVE, me.removeFeature, me);
+    //me.draw.on(nyc.ol.Draw.EventType.ACTIVE_CHANGED, function(active){
+    //    me.setTracking(!active);
+    //});
   },
   /**
    * @private
@@ -663,6 +680,13 @@ tk.NavAid.DASH_HTML = '<div class="nav-dash">' +
   '<div id="heading"><span></span></div>' +
   '<div id="arrival"><span></span></div>' +
 '</div>';
+
+/**
+ * @private
+ * @const
+ * @type {string}
+ */
+tk.NavAid.PAUSE_HTML = '<a class="pause-btn ctl ctl-btn" data-role="button" data-icon="none" data-iconpos="notext">Play/Pause</a>';
 
 /**
  * @private
