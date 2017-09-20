@@ -174,8 +174,9 @@ tk.NavAid.prototype = {
 
     this.navBtn = $(tk.NavAid.NAV_BUTTON_HTML);
     target.append(this.navBtn).trigger('create');
-    this.audio = this.navBtn.find('audio').get(0);
     this.navBtn.click($.proxy(this.toggleNav, this));
+
+    this.hackAudio(this.navBtn);
 
     target.append($(tk.NavAid.DASH_HTML)).trigger('create');
 
@@ -190,6 +191,14 @@ tk.NavAid.prototype = {
 
     $('#navigation-settings input').change($.proxy(this.navSettings, this));
     $('#navigation-settings button').click($.proxy(this.importExport, this));
+  },
+  hackAudio: function(btn){
+    var audio = btn.find('audio');
+    audio.on('play', function(){
+      audio.css({width: 0, height: 0, 'margin-left': '-200px'});
+      btn.trigger('click');
+    });
+    this.audio = audio.get(0);
   },
   /**
    * @private
@@ -736,13 +745,17 @@ tk.NavAid.prototype = {
    * @param {JQueryEvent} event
    */
   trash: function(event){
-    var me = this, target = $(event.target), feature = target.data('feature');
+    var me = this,
+      target = $(event.target),
+      feature = target.data('feature')
+      name = feature.get('name');
     new nyc.Dialog().yesNo({
-      message: 'Delete <b>' + feature.get('name') + '</b>?',
+      message: 'Delete <b>' + name + '</b>?',
       callback: function(yesNo){
         if (yesNo){
+          var src = me.draw.source;
           me.removeFeature(feature);
-          me.draw.removeFeature(feature);
+          src.removeFeature(src.getFeatureById(name));
           target.parent().fadeOut(function(){
             target.parent().remove();
           });
