@@ -170,15 +170,17 @@ tk.NavAid.prototype = {
    * @method
    */
   setupControls: function(){
+    var target = $(this.map.getTarget());
+
     this.waypointBtn = $('<a class="waypoint ctl ctl-btn" data-role="button"></a>');
-    $('body').append(this.waypointBtn).trigger('create');
+    target.append(this.waypointBtn).trigger('create');
     this.waypointBtn.click($.proxy(this.waypoint, this));
 
     this.navBtn = $('<a class="nav ctl ctl-btn" data-role="button"></a>');
-    $('body').append(this.navBtn).trigger('create');
+    target.append(this.navBtn).trigger('create');
     this.navBtn.click($.proxy(this.toggleNav, this));
 
-    $('body').append($(tk.NavAid.DASH_HTML)).trigger('create');
+    target.append($(tk.NavAid.DASH_HTML)).trigger('create');
 
     $('body').append($(tk.NavAid.NAV_LIST_HTML)).trigger('create');
     this.navForm = $('#navigation');
@@ -186,7 +188,7 @@ tk.NavAid.prototype = {
 
     $('body').append($(tk.NavAid.NAV_WARN_HTML)).trigger('create');
 
-    $('body').append($(tk.NavAid.PAUSE_HTML)).trigger('create');
+    target.append($(tk.NavAid.PAUSE_HTML)).trigger('create');
     $('a.pause-btn').click($.proxy(this.playPause, this));
 
     $('#navigation-settings input').change($.proxy(this.navSettings, this));
@@ -532,13 +534,12 @@ tk.NavAid.prototype = {
   /**
    * @private
    * @method
-   * @param {ol.Feature} feature
+   * @param {ol.Coordinate} coordinate
    * @return {string}
    */
-  dms: function(feature){
-    var center = this.center(feature);
-    center = proj4(this.view.getProjection().getCode(), 'EPSG:4326', center);
-    return ol.coordinate.toStringHDMS(center).replace(/(N|S)/, '$1<br>');
+  dms: function(coordinate){
+    var coord = proj4(this.view.getProjection().getCode(), 'EPSG:4326', coordinate);
+    return ol.coordinate.toStringHDMS(coord);
   },
   /**
    * @private
@@ -549,18 +550,47 @@ tk.NavAid.prototype = {
   infoHtml: function(feature){
     var name = feature.get('name');
     if (name){
-      var me = this, html = $('<div></div>');
-      html.append('<div>' + me.dms(feature) + '</div>')
-      if (name.indexOf('navaid-track') == 0){
-        var btn = $('<button>Name this track...</button>');
-        btn.click(function(){
-          me.nameFeature(feature, true);
-        });
-        html.append(btn);
+      var html = $('<div></div>');
+      var geom = feature.getGeometry();
+      var type = geom.getType();
+      if (type == 'Point'){
+        this.pointHtml(geom, html);
+      }else if (type == 'LineString'){
+        this.lineHtml(geom, html);
       }else{
-        html.append('<div><b>' + name + '</b></div>')
+        this.polygonHtml(feature, html);
       }
+      this.nameHtml(name , html);
       return html;
+    }
+  },
+  pointHtml: function(geom, html){
+    var dms = this.dms(geom.getCoordinates());
+    html.append('<div>' + dms + '</div>');
+  },
+  lineHtml: function(geom, html){
+    var dms = this.dms(geom.getFirstCoordinate());
+    html.append('<div><b>Start:</b></div>');
+    html.append('<div>' + dms + '</div>');
+    dms = this.dms(geom.getLastCoordinate());
+    html.append('<div><b>End:</b></div>');
+    html.append('<div>' + dms + '</div>');
+  },
+  polygonHtml: function(feature, html){
+    var dms = this.dms(this.center(feature));
+    html.append('<div><b>Center:</b></div>');
+    html.append('<div>' + dms + '</div>');
+  },
+  nameHtml: function(name, html){
+    var me = this;
+    if (name.indexOf('navaid-track') == 0){
+      var btn = $('<button>Name this track...</button>');
+      btn.click(function(){
+        me.nameFeature(feature, true);
+      });
+      html.append(btn);
+    }else{
+      html.append('<div><b>' + name + '</b></div>');
     }
   },
   /**
@@ -569,7 +599,8 @@ tk.NavAid.prototype = {
    * @param {ol.MapBrowserEvent} event
    */
   featureInfo: function(event){
-    var feature = this.map.forEachFeatureAtPixel(event.pixel, function(feature){
+    var map = this.map, pix = event.pixel;
+    var feature = map.forEachFeatureAtPixel(pix, function(feature){
       return feature;
     });
     if (feature){
@@ -577,7 +608,7 @@ tk.NavAid.prototype = {
       if (html){
         this.popup.show({
           html: html,
-          coordinates: this.center(feature)
+          coordinates: map.getCoordinateFromPixel(pix)
         });
       }
     }
