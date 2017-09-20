@@ -269,14 +269,29 @@ tk.NavAid.prototype = {
   updateDash: function(){
     var feature = this.navFeature;
     var speed = this.getSpeed() || 0;
-    var heading = Math.round((this.getHeading() || 0) * 180 / Math.PI) + '&deg;';
-    var distance = feature ? feature.getGeometry().getLength() : 0;
+    var heading = Math.round((this.getHeading() || 0) * 180 / Math.PI);
+    var distance = this.distance(feature);
     var arrival = this.remainingTime(distance, speed);
     this.checkCourse(feature, speed, heading);
     speed = (speed * 3.6 * 0.621371).toFixed(2) + ' mph';
     $('#speed span').html(speed);
-    $('#heading span').html(heading);
+    $('#heading span').html(heading + '&deg;');
     $('#arrival span').html(arrival)[arrival ? 'show' : 'hide']();
+  },
+  distance: function(feature){
+    if (feature){
+      var geom = feature.getGeometry();
+      var waypoint = geom.getLastCoordinate();
+      var distance = geom.getLength();
+      if (this.course){
+        var position = this.track.getLastCoordinate()
+        var course = this.course.getCoordinates();
+        course.slice($.inArray(waypoint, course));
+        distance += new ol.geom.LineString(course).getLength();
+      }
+      return distance;
+    }
+    return 0;
   },
   /**
    * @private
@@ -371,29 +386,39 @@ tk.NavAid.prototype = {
   /**
    * @private
    * @method
-   */
-  navigate: function(){
-    var origin = this.getPosition();
-    var geom = this.navFeature.getGeometry();
-    var destination = geom.getLastCoordinate();
-    geom.setCoordinates([origin, destination]);
-  },
-  /**
-   * @private
-   * @method
   * @param {JQueryEvent} event
    */
   beginNavigation: function(event){
-    var feature = $(event.target).data('feature');
-    var origin = this.getPosition();
-    var destination = this.center(feature);
-    this.navFeature = new ol.Feature({
-      geometry: new ol.geom.LineString([origin, destination]),
-    });
+    this.navFeature = new ol.Feature({geometry: new ol.geom.LineString([])});
+    this.source.addFeature(this.navFeature);
+    var btn = $(event.target);
+    var feature = btn.data('feature');
+    var direction = btn.data('direction');
+    this.setCourse(feature, direction);
+    this.nextWaypoint(this.getPosition());
     this.navBtn.addClass('stop');
     this.navForm.slideToggle();
-    this.source.addFeature(this.navFeature);
-    this.on(nyc.ol.Tracker.UPDATED, this.navigate, this);
+  },
+  setCourse: function(feature, direction){
+    var geom = feature.getGeometry();
+    if (geom.getType() == 'LineString'){
+      var coords = geom.clone().getCoordinates();
+      if (direction == 'rev'){
+        this.course = new ol.geom.LineString(coords.reverse());
+      }
+      this.course = new ol.geom.LineString(coords);
+    }else{
+      this.course = this.center(feature);
+    }
+  },
+  nextWaypoint: function(position, destination){
+    if (this.navFeature){
+      var waypoint = this.course;
+      if ('getClosestPoint' in waypoint){
+        waypoint = this.course.getClosestPoint(position);
+      }
+      this.navFeature.getGeometry().setCoordinates([position, waypoint]);
+    }
   },
   /**
    * @private
@@ -407,7 +432,7 @@ tk.NavAid.prototype = {
         callback: function(yesNo){
           if (yesNo){
             me.source.clear();
-            me.un(nyc.ol.Tracker.UPDATED, me.navigate, me);
+            me.navFeature = null;
             me.warnOff();
             btn.removeClass('stop');
           }
@@ -437,11 +462,7 @@ tk.NavAid.prototype = {
     var div = this.navForm.find('.nav-features').empty();
     $.each(names, function(_, name){
       if (name.indexOf('navaid-track') == -1){
-        var feature = me.namedFeatures[name];
-        var a = $('<a data-role="button">' + name + '</a>');
-        a.data('feature', feature);
-        a.click($.proxy(me.beginNavigation, me));
-        div.append(a).trigger('create');
+        me.addNavChoices(div, name, me.namedFeatures[name]);
       }
     });
     if (!div.html()){
@@ -449,6 +470,20 @@ tk.NavAid.prototype = {
     }
 
     me.navForm.slideToggle();
+  },
+  addNavChoices: function(div, name, feature){
+    var btns;
+    if (feature.getGeometry().getType() == 'LineString'){
+      var btns = $(
+        '<a data-role="button" data-direction="fwd">' + name + ' (foward)</a>' +
+        '<a data-role="button" data-direction="rev">' + name + ' (reverse)</a>'
+      );
+    }else{
+      btns = $('<a data-role="button">' + name + '</a>');
+    }
+    btns.data('feature', feature);
+    btns.click($.proxy(this.beginNavigation, this));
+    div.append(btns).trigger('create');
   },
   /**
    * @private
@@ -578,6 +613,7 @@ tk.NavAid.prototype = {
    */
   updateCurrentTrack: function(){
     this.trackFeature.setGeometry(this.track);
+    this.nextWaypoint(this.track.getLastCoordinate());
     this.updateDash();
   },
   /**
