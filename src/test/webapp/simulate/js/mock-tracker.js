@@ -36,7 +36,7 @@ tk.MockNavAid.prototype = {
     this.updatePosition();
   },
   loadMockData: function(){
-    this.loadBtn.remove();
+    $('.load-data').remove();
     this.storage.loadGeoJsonFile(this.map, $.proxy(this.ready, this));
   },
   ready: function(layer){
