@@ -288,7 +288,7 @@ tk.NavAid.prototype = {
       if (this.course){
         var position = this.track.getLastCoordinate()
         var course = this.course.getCoordinates();
-        course.slice($.inArray(waypoint, course));
+        course.slice(this.inCoords(waypoint, course));
         distance += new ol.geom.LineString(course).getLength();
       }
       return distance;
@@ -417,10 +417,34 @@ tk.NavAid.prototype = {
     if (this.navFeature){
       var waypoint = this.course;
       if ('getClosestPoint' in waypoint){
-        waypoint = this.course.getClosestPoint(position);
+        var course = this.course;
+        var coords = course.getCoordinates();
+        waypoint = course.getClosestPoint(position);
+        if (!this.inCoords(waypoint, coords) > -1){
+          for (var i = 0; i < coords.length - 1; i++){
+            if (this.isOnSeg(coords[i], coords[i + 1], waypoint)){
+              waypoint = coords[i + 1];
+              break;
+            }
+          }
+        }
       }
       this.navFeature.getGeometry().setCoordinates([position, waypoint]);
     }
+  },
+  inCoords: function(coord, coordinates){
+    var hit = false, i = -1;
+    $.each(coordinates, function(){
+      hit = this[0] == coord[0] && this[1] == coord[1];
+      i++;
+      return !hit;
+    });
+    return hit ? i : -1;
+  },
+  isOnSeg: function(start, end, waypoint){
+    var m = (start[1] - end[1]) / (start[0] - end[0]);
+    var b = start[1] - (start[0] * m);
+    return waypoint[1] == (m * waypoint[0]) + b;
   },
   /**
    * @private
