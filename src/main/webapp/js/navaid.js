@@ -69,29 +69,84 @@ tk.NavAid.prototype = {
   popup: null,
   /**
    * @private
-   * @member {Jquery}
+   * @member {nyc.Dialog}
+   */
+  dia: null,
+  /**
+   * @private
+   * @member {JQuery}
    */
   waypointBtn: null,
   /**
    * @private
-   * @member {Jquery}
+   * @member {JQuery}
    */
   navBtn: null,
   /**
    * @private
-   * @member {Jquery}
+   * @member {JQuery}
    */
   navForm: null,
   /**
    * @private
-   * @member {Jquery}
+   * @member {JQuery}
    */
   settingsForm: null,
   /**
    * @private
    * @member {ol.source.Vector}
    */
+  source: null,
+  /**
+   * @private
+   * @member {ol.Feature}
+   */
+  trackFeature: null,
+  /**
+   * @private
+   * @member {ol.source.Vector}
+   */
   navSource: null,
+  /**
+   * @private
+   * @member {ol.Feature}
+   */
+   navFeature: null,
+  /**
+   * @private
+   * @member {Element}
+   */
+  audio: null,
+  /**
+   * @private
+   * @member {Array<number>}
+   */
+  speeds: null,
+  /**
+   * @private
+   * @member {ol.geom.LineString}
+   */
+  course: null,
+  /**
+   * @private
+   * @member {number}
+   */
+  offCourse: null,
+  /**
+   * @private
+   * @member {number}
+   */
+  warnInterval: null,
+  /**
+   * @private
+   * @member {boolean}
+   */
+  warnAlarm: null,
+  /**
+   * @private
+   * @member {JQuery}
+   */
+  warnIcon: null,
   /**
    * @desc Enable or disable tracking
    * @public
