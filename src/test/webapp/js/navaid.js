@@ -1324,3 +1324,164 @@ QUnit.test('navSettings (from input)', function(assert){
   assert.equal(stored[2][0], navaid.degreesStore);
   assert.equal(stored[2][1], '25');
 });
+
+QUnit.test('center', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Polygon([[0, 0], [1, 1], [2, 2], [0, 0]])
+  });
+
+  assert.deepEqual(
+    navaid.center(feature),
+    ol.extent.getCenter(feature.getGeometry().getExtent())
+  );
+});
+
+QUnit.test('dms', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  assert.equal(navaid.dms(nyc.ol.Basemap.CENTER), '40° 42′ 22″ N 73° 58′ 43″ W');
+});
+
+QUnit.test('infoHtml/nameHtml/pointHtml', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Point(nyc.ol.Basemap.CENTER)
+  });
+  feature.setId('NYC Point');
+  assert.equal(
+    navaid.infoHtml(feature).html(),
+    '<div>40° 42′ 22″ N 73° 58′ 43″ W</div><div><b>NYC Point</b></div>'
+  );
+});
+
+QUnit.test('infoHtml/nameHtml/lineHtml', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.LineString([
+      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]],
+      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[3]]
+    ])
+  });
+  feature.setId('NYC Line');
+  assert.equal(
+    navaid.infoHtml(feature).html(),
+    '<div><b>Start:</b></div><div>40° 29′ 36″ N 74° 15′ 34″ W</div><div><b>End:</b></div><div>40° 55′ 06″ N 73° 41′ 45″ W</div><div><b>NYC Line</b></div>'
+  );
+});
+
+QUnit.test('infoHtml/nameHtml/lineHtml (un-named track)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.LineString([
+      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]],
+      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[3]]
+    ])
+  });
+  feature.setId('navaid-track-12');
+  assert.equal(
+    navaid.infoHtml(feature).html(),
+    '<div><b>Start:</b></div><div>40° 29′ 36″ N 74° 15′ 34″ W</div><div><b>End:</b></div><div>40° 55′ 06″ N 73° 41′ 45″ W</div><button>Name this track...</button>'
+  );
+});
+QUnit.test('infoHtml/nameHtml/polygonHtml', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+//[-8266522, 4937867, -8203781, 5000276]
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Polygon([[
+      ol.extent.getBottomLeft(nyc.ol.Basemap.EXTENT),
+      ol.extent.getTopLeft(nyc.ol.Basemap.EXTENT),
+      ol.extent.getTopRight(nyc.ol.Basemap.EXTENT),
+      ol.extent.getBottomRight(nyc.ol.Basemap.EXTENT),
+      ol.extent.getBottomLeft(nyc.ol.Basemap.EXTENT)
+    ]])
+  });
+  feature.setId('NYC Polygon');
+  assert.equal(
+    navaid.infoHtml(feature).html(),
+    '<div><b>Center:</b></div><div>40° 42′ 22″ N 73° 58′ 40″ W</div><div><b>NYC Polygon</b></div>'
+  );
+});
+
+QUnit.test('infoHtml (no name)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Polygon([
+      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]],
+      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[3]],
+      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[1]],
+      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]]
+    ])
+  });
+  assert.notOk(navaid.infoHtml(feature));
+});
+
+QUnit.test('featureInfo (no feature)', function(assert){
+  assert.expect(1);
+
+  this.TEST_MAP.forEachFeatureAtPixel = function(pix, fn){
+    assert.equal(pix, 'mock-pixel');
+  };
+
+  this.TEST_MAP.getCoordinateFromPixel = function(pix){
+    assert.ok(false);
+  };
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.infoHtml = function(feature){
+    assert.ok(false);
+  };
+  navaid.popup.show = function(options){
+    assert.ok(false);
+  };
+
+  navaid.featureInfo({pixel: 'mock-pixel'});
+});
+
+QUnit.test('featureInfo (has feature)', function(assert){
+  assert.expect(5);
+
+  this.TEST_MAP.forEachFeatureAtPixel = function(pix, fn){
+    assert.equal(pix, 'mock-pixel');
+    return 'mock-feature';
+  };
+
+  this.TEST_MAP.getCoordinateFromPixel = function(pix){
+    assert.equal(pix, 'mock-pixel');
+    return 'mock-coordinate';
+  };
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.infoHtml = function(feature){
+    assert.equal(feature, 'mock-feature');
+    return 'mock-html';
+  };
+  navaid.popup.show = function(options){
+    assert.equal(options.html, 'mock-html');
+    assert.equal(options.coordinates, 'mock-coordinate');
+  };
+
+  navaid.featureInfo({pixel: 'mock-pixel'});
+});
