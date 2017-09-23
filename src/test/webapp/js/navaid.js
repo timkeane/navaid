@@ -1044,3 +1044,96 @@ QUnit.test('inCoords', function(assert){
   assert.equal(navaid.inCoords([2, 2], [[1, 1], [2, 2], [3, 3]]), 1);
   assert.equal(navaid.inCoords([3, 3], [[1, 1], [2, 2], [3, 3]]), 2);
 });
+
+QUnit.test('toggleNav (on)', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+  navaid.navFeature = 'mock-feature';
+
+  navaid.navSource.clear = function(){
+    assert.ok(false);
+  };
+  navaid.warnOff = function(){
+    assert.ok(false);
+  };
+  navaid.showNavigation = function(){
+    assert.ok(true);
+  };
+  navaid.dia.yesNo = function(){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(args){
+    assert.ok(false);
+  };
+
+  navaid.navBtn.removeClass('stop');
+  navaid.toggleNav();
+
+  assert.notOk(navaid.navBtn.hasClass('stop'));
+  assert.equal(navaid.navFeature,'mock-feature');
+});
+
+QUnit.test('toggleNav (off, no)', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+  navaid.navFeature = 'mock-feature';
+
+  navaid.navFeature = 'mock-feature';
+
+  navaid.navSource.clear = function(){
+    assert.ok(false);
+  };
+  navaid.warnOff = function(){
+    assert.ok(false);
+  };
+  navaid.showNavigation = function(){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(args){
+    assert.equal(args.message, 'Stop navigation?');
+    args.callback(false);
+  };
+
+  navaid.navBtn.addClass('stop');
+  navaid.toggleNav();
+
+  assert.ok(navaid.navBtn.hasClass('stop'));
+  assert.equal(navaid.navFeature,'mock-feature');
+});
+
+QUnit.test('toggleNav (off, no)', function(assert){
+  assert.expect(5);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+  navaid.navFeature = 'mock-feature';
+
+  navaid.navFeature = 'mock-feature';
+
+  navaid.navSource.clear = function(){
+    assert.ok(true);
+  };
+  navaid.warnOff = function(){
+    assert.ok(true);
+  };
+  navaid.showNavigation = function(){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(args){
+    assert.equal(args.message, 'Stop navigation?');
+    args.callback(true);
+  };
+
+  navaid.navBtn.addClass('stop');
+  navaid.toggleNav();
+
+  assert.notOk(navaid.navBtn.hasClass('stop'));
+  assert.notOk(navaid.navFeature);
+});
