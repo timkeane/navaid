@@ -561,10 +561,6 @@ tk.NavAid.prototype = {
    */
   showNavigation: function(){
     var me = this;
-    if (!me.navForm){
-      me.navForm = $(tk.NavAid.NAV_LIST_HTML);
-      $('body').append(me.navForm).trigger('create');
-    }
 
     var features = me.source.getFeatures();
     features.sort(function(a, b){
@@ -595,11 +591,14 @@ tk.NavAid.prototype = {
         '<a class="begin" data-role="button" data-direction="rev">' +
           name + ' (reverse)</a><a class="trash"></a>'
       );
+      btns.get(0).id = 'nav-choice-' + name + '-fwd';
+      btns.get(2).id = 'nav-choice-' + name + '-rev';
     }else{
       btns = $(
         '<a class="begin" data-role="button">' + name +
         '</a><a class="trash"></a>'
       );
+      btns.get(0).id = 'nav-choice-' + name;
     }
     btns.data('feature', feature);
     btns.not('.trash').click($.proxy(this.beginNavigation, this));

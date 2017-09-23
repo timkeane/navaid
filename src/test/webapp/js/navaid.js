@@ -1078,7 +1078,6 @@ QUnit.test('toggleNav (off, no)', function(assert){
   assert.expect(3);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
-  navaid.navFeature = 'mock-feature';
 
   navaid.navFeature = 'mock-feature';
 
@@ -1110,7 +1109,6 @@ QUnit.test('toggleNav (off, no)', function(assert){
   assert.expect(5);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
-  navaid.navFeature = 'mock-feature';
 
   navaid.navFeature = 'mock-feature';
 
@@ -1136,4 +1134,109 @@ QUnit.test('toggleNav (off, no)', function(assert){
 
   assert.notOk(navaid.navBtn.hasClass('stop'));
   assert.notOk(navaid.navFeature);
+});
+
+QUnit.test('showNavigation', function(assert){
+  assert.expect(37);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var div = navaid.navForm.find('.nav-features')
+  navaid.source = new ol.source.Vector();
+
+  var clickedBtn;
+  navaid.beginNavigation = function(event){
+    clickedBtn = event.target;
+  };
+  navaid.trash = function(event){
+    clickedBtn = event.target;
+  };
+
+  navaid.showNavigation();
+
+  assert.equal(div.html(), '<p class="none">No stored locations</p>');
+
+  var f0 = new ol.Feature({
+    geometry: new ol.geom.Point([0, 0])
+  });
+  f0.setId('c');
+  var f1 = new ol.Feature({
+    geometry: new ol.geom.LineString([[0, 0], [1, 1]])
+  });
+  f1.setId('a');
+  var f2 = new ol.Feature({
+    geometry: new ol.geom.Polygon([[0, 0], [1, 1], [2, 2], [0, 0]])
+  });
+  f2.setId('navaid-track-11');
+  var f3 = new ol.Feature({
+    geometry: new ol.geom.Point([1, 1])
+  });
+  f3.setId('d');
+  var f4 = new ol.Feature({
+    geometry: new ol.geom.Point([2, 2])
+  });
+  f4.setId('b');
+
+  navaid.source.addFeatures([f0, f1, f2, f3, f4]);
+
+  navaid.showNavigation();
+
+  assert.equal(div.find('a').length, 10);
+
+  assert.equal($('#nav-choice-navaid-track-11').length, 0);
+  assert.equal($('#nav-choice-navaid-track-11-fwd').length, 0);
+  assert.equal($('#nav-choice-navaid-track-11-rev').length, 0);
+
+
+  assert.ok($('#nav-choice-a-fwd').get(0) === div.find('a').get(0));
+  assert.ok($('#nav-choice-a-fwd').data('feature') === f1);
+  assert.ok($('#nav-choice-a-fwd').data('direction') === 'fwd');
+  assert.ok($('#nav-choice-a-fwd').next().hasClass('trash'));
+  assert.ok($('#nav-choice-a-fwd').next().data('feature') === f1);
+
+  assert.ok($('#nav-choice-a-rev').get(0) === div.find('a').get(2));
+  assert.ok($('#nav-choice-a-rev').data('feature') === f1);
+  assert.ok($('#nav-choice-a-rev').data('direction') === 'rev');
+  assert.ok($('#nav-choice-a-rev').next().hasClass('trash'));
+  assert.ok($('#nav-choice-a-rev').next().data('feature') === f1);
+
+  assert.ok($('#nav-choice-b').get(0) === div.find('a').get(4));
+  assert.ok($('#nav-choice-b').data('feature') === f4);
+  assert.ok($('#nav-choice-b').next().hasClass('trash'));
+  assert.ok($('#nav-choice-b').next().data('feature') === f4);
+
+  assert.ok($('#nav-choice-c').get(0) === div.find('a').get(6));
+  assert.ok($('#nav-choice-c').data('feature') === f0);
+  assert.ok($('#nav-choice-c').next().hasClass('trash'));
+  assert.ok($('#nav-choice-c').next().data('feature') === f0);
+
+  assert.ok($('#nav-choice-d').get(0) === div.find('a').get(8));
+  assert.ok($('#nav-choice-d').data('feature') === f3);
+  assert.ok($('#nav-choice-d').next().hasClass('trash'));
+  assert.ok($('#nav-choice-d').next().data('feature') === f3);
+
+  $('#nav-choice-a-fwd').trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-a-fwd').get(0));
+  $('#nav-choice-a-fwd').next().trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-a-fwd').next().get(0));
+
+  $('#nav-choice-a-rev').trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-a-rev').get(0));
+  $('#nav-choice-a-rev').next().trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-a-rev').next().get(0));
+
+  $('#nav-choice-b').trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-b').get(0));
+  $('#nav-choice-b').next().trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-b').next().get(0));
+
+  $('#nav-choice-c').trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-c').get(0));
+  $('#nav-choice-c').next().trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-c').next().get(0));
+
+  $('#nav-choice-d').trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-d').get(0));
+  $('#nav-choice-d').next().trigger('click');
+  assert.ok(clickedBtn === $('#nav-choice-d').next().get(0));
 });
