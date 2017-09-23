@@ -1136,7 +1136,7 @@ QUnit.test('toggleNav (off, no)', function(assert){
   assert.notOk(navaid.navFeature);
 });
 
-QUnit.test('showNavigation', function(assert){
+QUnit.test('showNavigation/addNavChoices', function(assert){
   assert.expect(37);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
@@ -1239,4 +1239,88 @@ QUnit.test('showNavigation', function(assert){
   assert.ok(clickedBtn === $('#nav-choice-d').get(0));
   $('#nav-choice-d').next().trigger('click');
   assert.ok(clickedBtn === $('#nav-choice-d').next().get(0));
+});
+
+QUnit.test('navSettings (firstLaunch)', function(assert){
+  assert.expect(12);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.firstLaunch = true;
+
+  var stored = [];
+  navaid.storage.setItem = function(key, item){
+    stored.push([key, item]);
+  };
+
+  navaid.navSettings();
+
+  assert.ok(navaid.warnIcon);
+  assert.ok(navaid.warnAlarm);
+  assert.equal(navaid.offCourse, 20);
+  assert.equal(stored[0][0], navaid.iconStore);
+  assert.ok(stored[0][1]);
+  assert.equal(stored[1][0], navaid.alarmStore);
+  assert.ok(stored[1][1]);
+  assert.equal(stored[2][0], navaid.degreesStore);
+  assert.equal(stored[2][1], '20');
+  assert.ok($('#off-course-icon').is(':checked'));
+  assert.ok($('#off-course-alarm').is(':checked'));
+  assert.equal($('#off-course-degrees').val(), 20);
+});
+
+QUnit.test('navSettings (from storage)', function(assert){
+  assert.expect(6);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.firstLaunch = false;
+
+  navaid.storage.getItem = function(key){
+    if (key == navaid.iconStore) return 'true';
+    if (key == navaid.alarmStore) return 'false';
+    if (key == navaid.degreesStore) return '25';
+  };
+
+  navaid.navSettings();
+
+  assert.ok(navaid.warnIcon);
+  assert.notOk(navaid.warnAlarm);
+  assert.equal(navaid.offCourse, 25);
+  assert.ok($('#off-course-icon').is(':checked'));
+  assert.notOk($('#off-course-alarm').is(':checked'));
+  assert.equal($('#off-course-degrees').val(), 25);
+});
+
+QUnit.test('navSettings (from input)', function(assert){
+  assert.expect(9);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.firstLaunch = false;
+
+  navaid.warnIcon = true;
+  navaid.warnAlarm = false;
+  navaid.offCourse = 20;
+
+  $('#off-course-icon').prop('checked', false);
+  $('#off-course-alarm').prop('checked', true);
+  $('#off-course-degrees').val(25);
+
+  var stored = [];
+  navaid.storage.setItem = function(key, item){
+    stored.push([key, item]);
+  };
+
+  navaid.navSettings('mock-event');
+
+  assert.notOk(navaid.warnIcon);
+  assert.ok(navaid.warnAlarm);
+  assert.equal(navaid.offCourse, 25);
+  assert.equal(stored[0][0], navaid.iconStore);
+  assert.notOk(stored[0][1]);
+  assert.equal(stored[1][0], navaid.alarmStore);
+  assert.ok(stored[1][1]);
+  assert.equal(stored[2][0], navaid.degreesStore);
+  assert.equal(stored[2][1], '25');
 });

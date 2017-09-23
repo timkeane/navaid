@@ -621,10 +621,10 @@ tk.NavAid.prototype = {
     }else if(this.firstLaunch){
       this.warnIcon = true;
       this.warnAlarm = true;
-      this.offCourse = 10;
+      this.offCourse = 20;
       this.storage.setItem(this.iconStore, true);
       this.storage.setItem(this.alarmStore, true);
-      this.storage.setItem(this.degreesStore, 10);
+      this.storage.setItem(this.degreesStore, 20);
       $('#off-course-icon').prop('checked', this.warnIcon);
       $('#off-course-alarm').prop('checked', this.warnAlarm);
       $('#off-course-degrees').val(this.offCourse);
