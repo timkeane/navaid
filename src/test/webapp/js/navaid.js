@@ -719,7 +719,7 @@ QUnit.test('warnOn (not warnIcon, warnAlarm)', function(assert){
   window.setInterval = setInterval;
 });
 
-QUnit.test('warnOn (not warnIcon, warnAlarm)', function(assert){
+QUnit.test('warnOn (warnIcon, not warnAlarm)', function(assert){
   assert.expect(5);
 
   var setInterval = window.setInterval;
@@ -744,4 +744,303 @@ QUnit.test('warnOn (not warnIcon, warnAlarm)', function(assert){
   assert.ok(navaid.audio.muted);
 
   window.setInterval = setInterval;
+});
+
+QUnit.test('warnOn (not warnIcon, not warnAlarm)', function(assert){
+  assert.expect(4);
+
+  var setInterval = window.setInterval;
+
+  window.setInterval = function(fn, intv){
+    assert.ok(false);
+  };
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+  navaid.warnIcon = false;
+  navaid.warnAlarm = false;
+  navaid.audio = {muted: true};
+
+  $('#warning').hide();
+  assert.notOk($('#warning').is(':visible'));
+
+  navaid.warnOn();
+
+  assert.notOk($('#warning').is(':visible'));
+  assert.notOk(navaid.warnInterval);
+  assert.ok(navaid.audio.muted);
+
+  window.setInterval = setInterval;
+});
+
+QUnit.test('beginNavigation', function(assert){
+  assert.expect(7);
+
+  var done = assert.async();
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.setCourse = function(feature, direction){
+    assert.equal(feature, 'mock-feature');
+    assert.equal(direction, 'mock-direction');
+  };
+  navaid.navSource.addFeature = function(feature){
+    assert.ok(feature === navaid.navFeature);
+  };
+  navaid.getPosition = function(){
+    return 'mock-position';
+  };
+  navaid.nextWaypoint = function(position){
+    assert.equal(position, 'mock-position');
+  };
+
+  navaid.navForm.show();
+  assert.ok(navaid.navForm.is(':visible'));
+
+  var btn = $('<a></a>');
+  btn.data('feature', 'mock-feature');
+  btn.data('direction', 'mock-direction');
+
+  navaid.beginNavigation({target: btn.get(0)});
+
+  assert.ok(navaid.navBtn.hasClass('stop'));
+
+  setTimeout(function(){
+    assert.notOk(navaid.navForm.is(':visible'));
+    done();
+  }, 1000);
+});
+
+QUnit.test('setCourse (line, forward)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.course = new ol.geom.Point();
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.LineString([[0, 0], [1, 1]])
+  });
+
+  navaid.setCourse(feature, 'fwd');
+
+  assert.deepEqual(navaid.course.getCoordinates(), feature.getGeometry().getCoordinates());
+});
+
+QUnit.test('setCourse (line, reverse)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.course = new ol.geom.Point();
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.LineString([[0, 0], [1, 1]])
+  });
+
+  navaid.setCourse(feature, 'rev');
+
+  assert.deepEqual(navaid.course.getCoordinates(), feature.getGeometry().getCoordinates().reverse());
+});
+
+QUnit.test('setCourse (point)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.course = new ol.geom.Point();
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Point([0, 0])
+  });
+
+  navaid.setCourse(feature, 'rev');
+
+  assert.deepEqual(navaid.course.getCoordinates(), feature.getGeometry().getCoordinates());
+});
+
+QUnit.test('setCourse (polygon)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.course = new ol.geom.Point();
+
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Polygon([[0, 0], [1, 1], [0, 1], [0, 0]])
+  });
+
+  navaid.setCourse(feature, 'rev');
+
+  assert.deepEqual(
+    navaid.course.getCoordinates(),
+    ol.extent.getCenter(feature.getGeometry().getExtent())
+  );
+});
+
+QUnit.test('nextWaypoint (no navFeature, no course)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = null;
+  navaid.course = null;
+
+  navaid.inCoords = function(){
+    assert.ok(false);
+  };
+  navaid.isOnSeg = function(){
+    assert.ok(false);
+  };
+
+  navaid.nextWaypoint('mock-position');
+
+  assert.notOk(navaid.navFeature);
+});
+
+QUnit.test('nextWaypoint (has navFeature, no course)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = 'mock-feature';
+  navaid.course = null;
+
+  navaid.inCoords = function(){
+    assert.ok(false);
+  };
+  navaid.isOnSeg = function(){
+    assert.ok(false);
+  };
+
+  navaid.nextWaypoint('mock-position');
+
+  assert.equal(navaid.navFeature, 'mock-feature');
+});
+
+QUnit.test('nextWaypoint (no navFeature, has course)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = null;
+  navaid.course = 'mock-course';
+
+  navaid.inCoords = function(){
+    assert.ok(false);
+  };
+  navaid.isOnSeg = function(){
+    assert.ok(false);
+  };
+
+  navaid.nextWaypoint('mock-position');
+
+  assert.notOk(navaid.navFeature);
+});
+
+QUnit.test('nextWaypoint (has navFeature, course is point)', function(assert){
+  assert.expect(1);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = new ol.Feature({
+    geometry: new ol.geom.LineString()
+  });
+  navaid.course = [0, 0];
+
+  navaid.inCoords = function(){
+    assert.ok(false);
+  };
+  navaid.isOnSeg = function(){
+    assert.ok(false);
+  };
+
+  navaid.nextWaypoint([1, 1]);
+
+  assert.deepEqual(
+    navaid.navFeature.getGeometry().getCoordinates(),
+    [[1, 1], [0, 0]]
+  );
+});
+
+QUnit.test('nextWaypoint (has navFeature, course is line, next waypoint is vertex)', function(assert){
+  assert.expect(4);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = new ol.Feature({
+    geometry: new ol.geom.LineString()
+  });
+  navaid.course = new ol.geom.LineString([[0, 0], [0, 1], [3, 3], [4, 4]]);
+  navaid.course.getClosestPoint = function(coord){
+    assert.deepEqual(coord, [1, 1]);
+    return [3, 3];
+  }
+
+  navaid.inCoords = function(coord, coords){
+    assert.deepEqual(coord, [3, 3]);
+    assert.deepEqual(coords, navaid.course.getCoordinates());
+    return 2;
+  };
+  navaid.isOnSeg = function(){
+    assert.ok(false);
+  };
+
+  navaid.nextWaypoint([1, 1]);
+
+  assert.deepEqual(
+    navaid.navFeature.getGeometry().getCoordinates(),
+    [[1, 1], [3, 3]]
+  );
+});
+
+QUnit.test('nextWaypoint (has navFeature, course is line, next waypoint not vertex)', function(assert){
+  assert.expect(7);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.navFeature = new ol.Feature({
+    geometry: new ol.geom.LineString()
+  });
+  navaid.course = new ol.geom.LineString([[0, 0], [0, 1], [3, 3], [4, 4]]);
+  navaid.course.getClosestPoint = function(coord){
+    assert.deepEqual(coord, [1, 1]);
+    return [2, 2];
+  }
+
+  navaid.inCoords = function(coord, coords){
+    assert.deepEqual(coord, [2, 2]);
+    assert.deepEqual(coords, navaid.course.getCoordinates());
+    return -1;
+  };
+
+  var segCalls = [];
+  navaid.isOnSeg = function(start, end, waypoint){
+    segCalls.push([start, end, waypoint]);
+    if (start[0] == 0 && start[1] == 1 && end[0] == 3 && end[1] == 3){
+      return true;
+    }
+  };
+
+  navaid.nextWaypoint([1, 1]);
+
+  assert.deepEqual(
+    navaid.navFeature.getGeometry().getCoordinates(),
+    [[1, 1], [3, 3]]
+  );
+
+  assert.equal(segCalls.length, 2);
+  assert.deepEqual(segCalls[0], [[0, 0], [0, 1], [2, 2]]);
+  assert.deepEqual(segCalls[1], [[0, 1], [3, 3], [2, 2]]);
+});
+
+QUnit.test('inCoords', function(assert){
+  assert.expect(5);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  assert.equal(navaid.inCoords([0, 0], [[1, 1], [2, 2], [3, 3]]), -1);
+  assert.equal(navaid.inCoords([0, 1], [[1, 1], [2, 2], [3, 3]]), -1);
+  assert.equal(navaid.inCoords([1, 1], [[1, 1], [2, 2], [3, 3]]), 0);
+  assert.equal(navaid.inCoords([2, 2], [[1, 1], [2, 2], [3, 3]]), 1);
+  assert.equal(navaid.inCoords([3, 3], [[1, 1], [2, 2], [3, 3]]), 2);
 });

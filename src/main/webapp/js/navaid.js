@@ -500,14 +500,14 @@ tk.NavAid.prototype = {
       this.course = new ol.geom.Point(this.center(feature));
     }
   },
-  nextWaypoint: function(position, destination){
+  nextWaypoint: function(position){
     var waypoint = this.course;
     if (this.navFeature && waypoint){
       if ('getClosestPoint' in waypoint){
         var course = this.course;
         var coords = course.getCoordinates();
         waypoint = course.getClosestPoint(position);
-        if (!this.inCoords(waypoint, coords) > -1){
+        if (this.inCoords(waypoint, coords) == -1){
           for (var i = 0; i < coords.length - 1; i++){
             if (this.isOnSeg(coords[i], coords[i + 1], waypoint)){
               waypoint = coords[i + 1];
