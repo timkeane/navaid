@@ -1859,3 +1859,139 @@ QUnit.test('updateStorage', function(assert){
 
   navaid.updateStorage();
 });
+
+QUnit.test('importExport (clear yes)', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.storage.getItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.removeItem = function(key){
+    assert.equal(key, navaid.featuresStore);
+  };
+  navaid.storage.saveGeoJson = function(fileName, json){
+    assert.ok(false);
+  };
+  navaid.storage.readTextFile = function(callback){
+    assert.ok(false);
+  };
+  navaid.restoreFeatures = function(store){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(options){
+      assert.equal(options.message, 'Delete all location data?');
+      options.callback(true);
+  };
+
+  var feature = new ol.Feature();
+  navaid.source.clear();
+  navaid.source.addFeature(feature)
+
+  $('#navigation-settings button.empty').trigger('click');
+
+  assert.equal(navaid.source.getFeatures().length, 0);
+});
+
+QUnit.test('importExport (clear no)', function(assert){
+  assert.expect(2);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.storage.getItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.removeItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.saveGeoJson = function(fileName, json){
+    assert.ok(false);
+  };
+  navaid.storage.readTextFile = function(callback){
+    assert.ok(false);
+  };
+  navaid.restoreFeatures = function(store){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(options){
+      assert.equal(options.message, 'Delete all location data?');
+      options.callback(false);
+  };
+
+  var feature = new ol.Feature();
+  navaid.source.clear();
+  navaid.source.addFeature(feature)
+
+  $('#navigation-settings button.empty').trigger('click');
+
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+});
+
+QUnit.test('importExport (export)', function(assert){
+  assert.expect(4);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.storage.getItem = function(key){
+    assert.equal(key, navaid.featuresStore);
+    return 'mock-json';
+  };
+  navaid.storage.removeItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.saveGeoJson = function(fileName, json){
+    assert.equal(fileName, 'locations.json');
+    assert.equal(json, 'mock-json');
+  };
+  navaid.storage.readTextFile = function(callback){
+    assert.ok(false);
+  };
+  navaid.restoreFeatures = function(store){
+    assert.ok(false);
+  };
+  navaid.dia.yesNo = function(options){
+    assert.ok(false);
+  };
+
+  var feature = new ol.Feature();
+  navaid.source.clear();
+  navaid.source.addFeature(feature)
+
+  $('#navigation-settings button.export').trigger('click');
+
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+});
+
+QUnit.test('importExport (import)', function(assert){
+  assert.expect(2);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.storage.getItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.removeItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.saveGeoJson = function(fileName, json){
+    assert.ok(false);
+  };
+  navaid.storage.readTextFile = function(callback){
+    callback('mock-json');
+  };
+  navaid.restoreFeatures = function(store){
+    assert.equal(store, 'mock-json');
+  };
+  navaid.dia.yesNo = function(options){
+    assert.ok(false);
+  };
+
+  var feature = new ol.Feature();
+  navaid.source.clear();
+  navaid.source.addFeature(feature)
+
+  $('#navigation-settings button.import').trigger('click');
+
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+});

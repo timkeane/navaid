@@ -850,7 +850,7 @@ tk.NavAid.prototype = {
           }
         }
       });
-      dia.container.find('.btn-no').focus();
+      me.dia.container.find('.btn-no').focus();
     }else if (btn.hasClass('export')){
       storage.saveGeoJson('locations.json', storage.getItem(me.featuresStore));
     }else{
