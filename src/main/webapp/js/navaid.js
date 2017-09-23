@@ -755,6 +755,9 @@ tk.NavAid.prototype = {
         this.storage.setItem(this.featuresStore, stored);
       }
     }catch(ex){
+      this.dia.ok({
+        message: ex.name + '<br>' + ex.message
+      })
       console.error(ex);
     }
   },
