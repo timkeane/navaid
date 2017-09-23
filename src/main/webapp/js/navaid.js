@@ -791,6 +791,7 @@ tk.NavAid.prototype = {
       callback: function(name){
         if (!name){
           me.source.removeFeature(feature);
+          me.updateStorage();
         }else if (!me.source.getFeatureById(name)){
           feature.setId(name);
           me.updateStorage();

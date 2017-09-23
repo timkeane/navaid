@@ -1649,3 +1649,213 @@ QUnit.test('restoreFeatures (bad storage passed as argument)', function(assert){
 
   console.error = error;
 });
+
+QUnit.test('updateCurrentTrack', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var track = new ol.geom.LineString([[0, 0], [1, 1], [2, 2]]);
+  navaid.track = track;
+  navaid.trackFeature = new ol.Feature();
+
+  navaid.nextWaypoint = function(position){
+    assert.deepEqual(position, [2, 2]);
+  };
+  navaid.updateDash = function(){
+    assert.ok(true);
+  };
+
+  navaid.updateCurrentTrack();
+
+  assert.ok(navaid.trackFeature.getGeometry() === track);
+});
+
+QUnit.test('waypoint', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature();
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.getPosition = function(position){
+    return [0, 0];
+  };
+
+  navaid.waypoint();
+
+  assert.equal(navaid.source.getFeatures().length, 2);
+  assert.ok(navaid.source.getFeatures()[1] === feature);
+  assert.deepEqual(navaid.source.getFeatures()[0].getGeometry().getCoordinates(), [0, 0]);
+});
+
+QUnit.test('nameFeature (name entered)', function(assert){
+  assert.expect(5);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.updateStorage = function(){
+    assert.ok(true);
+  };
+  navaid.dia.input = function(options){
+    assert.notOk(options.message);
+    assert.equal(options.placeholder, 'Enter a name...');
+    options.callback('the-name');
+  };
+  navaid.dia.ok = function(options){
+    assert.ok(false);
+  };
+
+  var feature = new ol.Feature();
+  feature.setId('un-named');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.nameFeature(feature);
+
+  assert.equal(feature.getId(), 'the-name');
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+});
+
+QUnit.test('nameFeature (name not entered)', function(assert){
+  assert.expect(5);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.updateStorage = function(){
+    assert.ok(true);
+  };
+  navaid.dia.input = function(options){
+    assert.notOk(options.message);
+    assert.equal(options.placeholder, 'Enter a name...');
+    options.callback('');
+  };
+  navaid.dia.ok = function(options){
+    assert.ok(false);
+  };
+
+  var feature = new ol.Feature();
+  feature.setId('un-named');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.nameFeature(feature);
+
+  assert.equal(feature.getId(), 'un-named');
+  assert.equal(navaid.source.getFeatures().length, 0);
+});
+
+QUnit.test('nameFeature (name exists)', function(assert){
+  assert.expect(6);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.updateStorage = function(){
+    assert.ok(false);
+  };
+  navaid.dia.input = function(options){
+    assert.notOk(options.message);
+    assert.equal(options.placeholder, 'Enter a name...');
+    options.callback('the-name');
+  };
+  navaid.dia.ok = function(options){
+    assert.equal(options.message, '<b>the-name</b> is already assigned');
+    navaid.nameFeature = function(feat){
+      assert.ok(feat == feature);
+    };
+    options.callback();
+  };
+
+  var feature = new ol.Feature();
+  feature.setId('the-name');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.nameFeature(feature);
+
+  assert.equal(feature.getId(), 'the-name');
+  assert.equal(navaid.source.getFeatures().length, 1);
+});
+
+QUnit.test('trash (yes)', function(assert){
+  assert.expect(3);
+
+  var done = assert.async();
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.dia.yesNo = function(options){
+    assert.equal(options.message, 'Delete <b>the-name</b>?');
+    options.callback(true);
+  };
+
+  var feature = new ol.Feature({geometry: new ol.geom.Point([0, 0])});
+  feature.setId('the-name');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.showNavigation();
+
+  $('#nav-choice-the-name').next().trigger('click');
+
+  assert.equal(navaid.source.getFeatures().length, 0);
+
+  setTimeout(function(){
+    assert.equal($('#nav-choice-the-name').length, 0);
+    done();
+  }, 1000);
+});
+
+QUnit.test('trash (no)', function(assert){
+  assert.expect(4);
+
+  var done = assert.async();
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  navaid.dia.yesNo = function(options){
+    assert.equal(options.message, 'Delete <b>the-name</b>?');
+    options.callback(false);
+  };
+
+  var feature = new ol.Feature({geometry: new ol.geom.Point([0, 0])});
+  feature.setId('the-name');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.showNavigation();
+
+  $('#nav-choice-the-name').next().trigger('click');
+
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+
+  setTimeout(function(){
+    assert.equal($('#nav-choice-the-name').length, 1);
+    assert.ok($('#nav-choice-the-name').next().hasClass('trash'));
+    done();
+  }, 1000);
+});
+
+QUnit.test('updateStorage', function(assert){
+  assert.expect(2);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature({geometry: new ol.geom.Point([0, 0])});
+  feature.setId('the-name');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  var geoJson = new ol.format.GeoJSON().writeFeatures([feature], {
+    featureProjection: this.TEST_MAP.getView().getProjection()
+  });
+
+  navaid.storage.setItem = function(key, item){
+    assert.equal(key, navaid.featuresStore);
+    assert.equal(item, JSON.stringify(geoJson));
+  };
+
+  navaid.updateStorage();
+});
