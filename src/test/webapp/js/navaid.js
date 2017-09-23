@@ -1485,3 +1485,167 @@ QUnit.test('featureInfo (has feature)', function(assert){
 
   navaid.featureInfo({pixel: 'mock-pixel'});
 });
+
+QUnit.test('restoreFeatures (get from store, has stored)', function(assert){
+  assert.expect(6);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var format = new ol.format.GeoJSON();
+  var geoJsonString = '{"type":"FeatureCollection","features":[{"type":"Feature","id":"after-0","geometry":{"type":"Point","coordinates":[-73.62460819692423,40.61323216067703]},"properties":null},{"type":"Feature","id":"after-1","geometry":{"type":"LineString","coordinates":[[-72.86105839223671,40.9293983447119],[-73.34445682973671,41.18620835500599],[-73.57516972036173,40.867116304827164],[-73.71799198598671,40.90864418063305]]},"properties":null}]}';
+  var geoJsonFeatures = format.readFeatures(geoJsonString, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857'
+  });
+  var feature = new ol.Feature();
+  feature.setId('before');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.storage.getItem = function(key){
+    assert.equal(key, navaid.featuresStore);
+    return geoJsonString;
+  };
+  navaid.storage.setItem = function(key){
+    assert.ok(false);
+  };
+
+  navaid.restoreFeatures();
+
+  assert.equal(navaid.source.getFeatures().length, 2);
+  assert.equal(navaid.source.getFeatures()[0].getId(), 'after-0');
+  assert.deepEqual(
+    navaid.source.getFeatures()[0].getGeometry().getCoordinates(),
+    geoJsonFeatures[0].getGeometry().getCoordinates()
+  );
+  assert.equal(navaid.source.getFeatures()[1].getId(), 'after-1');
+  assert.deepEqual(
+    navaid.source.getFeatures()[1].getGeometry().getCoordinates(),
+    geoJsonFeatures[1].getGeometry().getCoordinates()
+  );
+});
+
+QUnit.test('restoreFeatures (get from store, nothing stored)', function(assert){
+  assert.expect(3);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var feature = new ol.Feature();
+  feature.setId('before');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.storage.getItem = function(key){
+    assert.equal(key, navaid.featuresStore);
+  };
+  navaid.storage.setItem = function(key){
+    assert.ok(false);
+  };
+
+  navaid.restoreFeatures();
+
+  assert.equal(navaid.source.getFeatures().length, 1);
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+});
+
+QUnit.test('restoreFeatures (get from store, bad storage)', function(assert){
+  assert.expect(5);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var error = console.error;
+  console.error = function(ex){
+    assert.equal(ex.name, 'SyntaxError');
+    assert.equal(ex.message, 'Unexpected token b in JSON at position 0');
+  };
+
+  var feature = new ol.Feature();
+  feature.setId('before');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.storage.getItem = function(key){
+    assert.equal(key, navaid.featuresStore);
+    return 'bad-storage';
+  };
+  navaid.storage.setItem = function(key){
+    assert.ok(false);
+  };
+
+  navaid.restoreFeatures();
+
+  assert.equal(navaid.source.getFeatures().length, 1);
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+
+  console.error = error;
+});
+
+QUnit.test('restoreFeatures (stored as argument)', function(assert){
+  assert.expect(7);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var format = new ol.format.GeoJSON();
+  var geoJsonString = '{"type":"FeatureCollection","features":[{"type":"Feature","id":"after-0","geometry":{"type":"Point","coordinates":[-73.62460819692423,40.61323216067703]},"properties":null},{"type":"Feature","id":"after-1","geometry":{"type":"LineString","coordinates":[[-72.86105839223671,40.9293983447119],[-73.34445682973671,41.18620835500599],[-73.57516972036173,40.867116304827164],[-73.71799198598671,40.90864418063305]]},"properties":null}]}';
+  var geoJsonFeatures = format.readFeatures(geoJsonString, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857'
+  });
+  var feature = new ol.Feature();
+  feature.setId('before');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.storage.getItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.setItem = function(key, item){
+    assert.equal(key, navaid.featuresStore);
+    assert.equal(item, geoJsonString);
+  };
+
+  navaid.restoreFeatures(geoJsonString);
+
+  assert.equal(navaid.source.getFeatures().length, 2);
+  assert.equal(navaid.source.getFeatures()[0].getId(), 'after-0');
+  assert.deepEqual(
+    navaid.source.getFeatures()[0].getGeometry().getCoordinates(),
+    geoJsonFeatures[0].getGeometry().getCoordinates()
+  );
+  assert.equal(navaid.source.getFeatures()[1].getId(), 'after-1');
+  assert.deepEqual(
+    navaid.source.getFeatures()[1].getGeometry().getCoordinates(),
+    geoJsonFeatures[1].getGeometry().getCoordinates()
+  );
+});
+
+QUnit.test('restoreFeatures (bad storage passed as argument)', function(assert){
+  assert.expect(4);
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+  var error = console.error;
+  console.error = function(ex){
+    assert.equal(ex.name, 'SyntaxError');
+    assert.equal(ex.message, 'Unexpected token b in JSON at position 0');
+  };
+
+  var feature = new ol.Feature();
+  feature.setId('before');
+  navaid.source.clear();
+  navaid.source.addFeature(feature);
+
+  navaid.storage.getItem = function(key){
+    assert.ok(false);
+  };
+  navaid.storage.setItem = function(key){
+    assert.ok(false);
+  };
+
+  navaid.restoreFeatures('bad-storage');
+
+  assert.equal(navaid.source.getFeatures().length, 1);
+  assert.ok(navaid.source.getFeatures()[0] === feature);
+
+  console.error = error;
+});
