@@ -13,15 +13,14 @@ var tk = window.tk || {};
  * @param {nyc.ol.Tracker.Options} options Constructor options
  */
 tk.NavAid = function(options){
-  options.showEveryTrackPositon = false;
   nyc.ol.Tracker.call(this, options);
-  this.startingZoomLevel = options.startingZoomLevel || 14;
+  this.startingZoomLevel = options.startingZoomLevel || 15;
   this.popup = new nyc.ol.Popup(this.map);
   this.on(nyc.ol.Tracker.EventType.UPDATED, this.updateCurrentTrack, this);
   this.source = new ol.source.Vector();
   this.dia = new nyc.Dialog();
   this.baseLayer();
-  this.initDraw(this.source);
+  this.initDraw();
   this.restoreFeatures();
   this.initCurrentTrack();
   this.setupControls();
@@ -225,7 +224,7 @@ tk.NavAid.prototype = {
     var target = $(this.map.getTarget());
 
     $('.draw-btn-mnu .square, .draw-btn-mnu .box, .draw-btn-mnu .gps, .draw-btn-mnu .save, .draw-btn-mnu .delete').remove();
-    this.waypointBtn = $('<a class="waypoint ctl ctl-btn" data-role="button"></a>');
+    this.waypointBtn = $(tk.NavAid.WAYPOINT_HTML);
     target.append(this.waypointBtn).trigger('create');
     this.waypointBtn.click($.proxy(this.waypoint, this));
 
@@ -265,7 +264,7 @@ tk.NavAid.prototype = {
   playPause: function(event){
     var me = this, btn = $(event.target), tracking = !btn.hasClass('pause');
     if (tracking){
-      me.view.animate({zoom: 15});
+      me.view.animate({zoom: me.startingZoomLevel});
       me.draw.deactivate(true);
     }
     setTimeout(function(){
@@ -283,7 +282,7 @@ tk.NavAid.prototype = {
     this.storage.setItem('navaid-track-index', trackIdx);
 
     var name = 'navaid-track-' + trackIdx;
-    this.trackFeature = new ol.Feature({name: name});
+    this.trackFeature = new ol.Feature();
     this.trackFeature.setId(name);
     this.updateStorage();
   },
@@ -292,11 +291,11 @@ tk.NavAid.prototype = {
    * @method
    * @param {ol.source.Vector} source
    */
-  initDraw: function(source){
+  initDraw: function(){
     var me = this;
     me.draw = new nyc.ol.Draw({
       map: me.map,
-      source: source,
+      source: me.source,
       restore: false,
       showEveryTrackPositon: false,
       style: [
@@ -352,22 +351,22 @@ tk.NavAid.prototype = {
     $('#arrival span').html(arrival)[arrival ? 'show' : 'hide']();
   },
   avgSpeed: function(){
-    var speed = this.getSpeed() || 0;
+    var speed = this.getSpeed() || 0, speeds = this.speeds;
     if (this.speeds.length == 10){
-      this.speeds.unshift(speed);
-      this.speeds.pop();
+      speeds.unshift(speed);
+      speeds.pop();
     }else{
-      this.speeds.push(speed);
+      speeds.unshift(speed);
     }
-    var avgSpeed = 0;
+    var speedSum = 0;
     $.each(speeds, function(){
-      avgSpeed += this;
+      speedSum += this;
     });
-    return avgSpeed / speed.length;
+    return speedSum / speeds.length;
   },
-  distance: function(feature){
-    if (feature){
-      var geom = feature.getGeometry();
+  distance: function(navFeature){
+    if (navFeature){
+      var geom = navFeature.getGeometry();
       var waypoint = geom.getLastCoordinate();
       var distance = geom.getLength();
       if (this.course){
@@ -413,15 +412,12 @@ tk.NavAid.prototype = {
    * @param {boolean} asRadians
    * @return {number}
    */
-  heading: function(line, asRadians) {
+  heading: function(line) {
     var start = line.getFirstCoordinate();
     var end = line.getLastCoordinate();
   	var dx = end[0] - start[0];
   	var dy = end[1] - start[1];
   	var rad = Math.acos(dy / Math.sqrt(dx * dx + dy * dy));
-    if (asRadians){
-      return rad;
-    }
     var deg = 360 / (2 * Math.PI) * rad;
     if (dx < 0){
         return 360 - deg;
@@ -505,8 +501,8 @@ tk.NavAid.prototype = {
     }
   },
   nextWaypoint: function(position, destination){
-    if (this.navFeature){
-      var waypoint = this.course;
+    var waypoint = this.course;
+    if (this.navFeature && waypoint){
       if ('getClosestPoint' in waypoint){
         var course = this.course;
         var coords = course.getCoordinates();
@@ -907,6 +903,13 @@ tk.NavAid.DASH_HTML = '<div class="nav-dash">' +
  * @type {string}
  */
 tk.NavAid.PAUSE_HTML = '<a class="pause-btn ctl ctl-btn" data-role="button" data-icon="none" data-iconpos="notext">Play/Pause</a>';
+
+/**
+ * @private
+ * @const
+ * @type {string}
+ */
+tk.NavAid.WAYPOINT_HTML = '<a class="waypoint ctl ctl-btn" data-role="button"></a>';
 
 /**
  * @private
