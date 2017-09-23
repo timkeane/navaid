@@ -756,7 +756,7 @@ tk.NavAid.prototype = {
       }
     }catch(ex){
       this.dia.ok({
-        message: ex.name + '<br>' + ex.message
+        message: '<b>' + ex.name + ':</b><br>' + ex.message
       });
       console.error(ex);
     }
