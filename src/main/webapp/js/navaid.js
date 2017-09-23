@@ -737,10 +737,9 @@ tk.NavAid.prototype = {
    * @param {string|undefiend} stored
    */
   restoreFeatures: function(stored){
+    var importing = stored;
     try{
-      if (stored){
-        this.storage.setItem(this.featuresStore, stored);
-      }else{
+      if (!importing){
         stored = this.storage.getItem(this.featuresStore);
       }
       if (stored){
@@ -751,6 +750,9 @@ tk.NavAid.prototype = {
         });
         this.source.clear();
         this.source.addFeatures(features);
+      }
+      if (importing){
+        this.storage.setItem(this.featuresStore, stored);
       }
     }catch(ex){
       console.error(ex);
