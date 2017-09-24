@@ -232,11 +232,11 @@ QUnit.test('navLayer', function(assert){
   assert.ok(nav.getSource() === navaid.navSource);
   assert.equal(nav.getStyle().length, 2);
   assert.equal(nav.getStyle()[0].getStroke().getColor(), 'yellow');
-  assert.equal(nav.getStyle()[0].getStroke().getWidth(), 4);
+  assert.equal(nav.getStyle()[0].getStroke().getWidth(), 6);
   assert.notOk(nav.getStyle()[0].getFill());
   assert.notOk(nav.getStyle()[0].getImage());
   assert.equal(nav.getStyle()[1].getStroke().getColor(), 'red');
-  assert.equal(nav.getStyle()[1].getStroke().getWidth(), 2);
+  assert.equal(nav.getStyle()[1].getStroke().getWidth(), 4);
   assert.notOk(nav.getStyle()[1].getFill());
   assert.notOk(nav.getStyle()[1].getImage());
 });
@@ -435,7 +435,7 @@ QUnit.test('initDraw (called by constructor)', function(assert){
 
   assert.equal(navaid.draw.layer.getStyle()[1].getZIndex(), 200);
   assert.equal(navaid.draw.layer.getStyle()[1].getStroke().getColor(), 'red');
-  assert.equal(navaid.draw.layer.getStyle()[1].getStroke().getWidth(), 3);
+  assert.equal(navaid.draw.layer.getStyle()[1].getStroke().getWidth(), 4);
   assert.notOk(navaid.draw.layer.getStyle()[1].getFill());
   assert.notOk(navaid.draw.layer.getStyle()[1].getImage());
 
@@ -1503,12 +1503,12 @@ QUnit.test('restoreFeatures (get from store, has stored)', function(assert){
   navaid.source.clear();
   navaid.source.addFeature(feature);
 
+	navaid.updateStorage = function(){
+		assert.ok(false);
+	};
   navaid.storage.getItem = function(key){
     assert.equal(key, navaid.featuresStore);
     return geoJsonString;
-  };
-  navaid.storage.setItem = function(key){
-    assert.ok(false);
   };
 
   navaid.restoreFeatures();
@@ -1536,11 +1536,11 @@ QUnit.test('restoreFeatures (get from store, nothing stored)', function(assert){
   navaid.source.clear();
   navaid.source.addFeature(feature);
 
+	navaid.updateStorage = function(){
+		assert.ok(false);
+	};
   navaid.storage.getItem = function(key){
     assert.equal(key, navaid.featuresStore);
-  };
-  navaid.storage.setItem = function(key){
-    assert.ok(false);
   };
 
   navaid.restoreFeatures();
@@ -1565,12 +1565,12 @@ QUnit.test('restoreFeatures (get from store, bad storage)', function(assert){
   navaid.source.clear();
   navaid.source.addFeature(feature);
 
+	navaid.updateStorage = function(){
+		assert.ok(false);
+	};
   navaid.storage.getItem = function(key){
     assert.equal(key, navaid.featuresStore);
     return 'bad-storage';
-  };
-  navaid.storage.setItem = function(key){
-    assert.ok(false);
   };
 
   navaid.restoreFeatures();
@@ -1582,7 +1582,7 @@ QUnit.test('restoreFeatures (get from store, bad storage)', function(assert){
 });
 
 QUnit.test('restoreFeatures (stored as argument)', function(assert){
-  assert.expect(9);
+  assert.expect(8);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
@@ -1597,12 +1597,11 @@ QUnit.test('restoreFeatures (stored as argument)', function(assert){
   navaid.source.clear();
   navaid.source.addFeature(feature);
 
+	navaid.updateStorage = function(){
+		assert.ok(true);
+	};
   navaid.storage.getItem = function(key){
     assert.ok(false);
-  };
-  navaid.storage.setItem = function(key, item){
-    assert.equal(key, navaid.featuresStore);
-    assert.equal(item, geoJsonString);
   };
 
   navaid.restoreFeatures(geoJsonString);
