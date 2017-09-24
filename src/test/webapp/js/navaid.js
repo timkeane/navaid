@@ -1582,7 +1582,7 @@ QUnit.test('restoreFeatures (get from store, bad storage)', function(assert){
 });
 
 QUnit.test('restoreFeatures (stored as argument)', function(assert){
-  assert.expect(7);
+  assert.expect(9);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
@@ -1607,17 +1607,19 @@ QUnit.test('restoreFeatures (stored as argument)', function(assert){
 
   navaid.restoreFeatures(geoJsonString);
 
-  assert.equal(navaid.source.getFeatures().length, 2);
+  assert.equal(navaid.source.getFeatures().length, 3);
   assert.equal(navaid.source.getFeatures()[0].getId(), 'after-0');
   assert.deepEqual(
     navaid.source.getFeatures()[0].getGeometry().getCoordinates(),
     geoJsonFeatures[0].getGeometry().getCoordinates()
   );
-  assert.equal(navaid.source.getFeatures()[1].getId(), 'after-1');
+	assert.equal(navaid.source.getFeatures()[1].getId(), 'after-1');
   assert.deepEqual(
     navaid.source.getFeatures()[1].getGeometry().getCoordinates(),
     geoJsonFeatures[1].getGeometry().getCoordinates()
   );
+	assert.equal(navaid.source.getFeatures()[2].getId(), 'before');
+  assert.ok(navaid.source.getFeatures()[2] === feature);
 });
 
 QUnit.test('restoreFeatures (bad storage passed as argument)', function(assert){
