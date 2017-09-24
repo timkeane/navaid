@@ -1176,8 +1176,11 @@ QUnit.test('showNavigation/addNavChoices', function(assert){
     geometry: new ol.geom.Point([2, 2])
   });
   f4.setId('b');
+	var f5 = new ol.Feature({
+    geometry: new ol.geom.Polygon([[0, 0], [1, 1], [2, 2], [0, 0]])
+  });
 
-  navaid.source.addFeatures([f0, f1, f2, f3, f4]);
+  navaid.source.addFeatures([f0, f1, f2, f3, f4, f5]);
 
   navaid.showNavigation();
 
@@ -1395,7 +1398,7 @@ QUnit.test('infoHtml/nameHtml/lineHtml (un-named track)', function(assert){
   feature.setId('navaid-track-12');
   assert.equal(
     navaid.infoHtml(feature).html(),
-    '<div><b>Start:</b></div><div>40° 29′ 36″ N 74° 15′ 34″ W</div><div><b>End:</b></div><div>40° 55′ 06″ N 73° 41′ 45″ W</div><button>Name this track...</button>'
+    '<div><b>Start:</b></div><div>40° 29′ 36″ N 74° 15′ 34″ W</div><div><b>End:</b></div><div>40° 55′ 06″ N 73° 41′ 45″ W</div><button>Add name...</button>'
   );
 });
 QUnit.test('infoHtml/nameHtml/polygonHtml', function(assert){
@@ -1426,14 +1429,12 @@ QUnit.test('infoHtml (no name)', function(assert){
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
   var feature = new ol.Feature({
-    geometry: new ol.geom.Polygon([
-      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]],
-      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[3]],
-      [nyc.ol.Basemap.EXTENT[2], nyc.ol.Basemap.EXTENT[1]],
-      [nyc.ol.Basemap.EXTENT[0], nyc.ol.Basemap.EXTENT[1]]
-    ])
+    geometry: new ol.geom.Point(nyc.ol.Basemap.CENTER)
   });
-  assert.notOk(navaid.infoHtml(feature));
+  assert.equal(
+    navaid.infoHtml(feature).html(),
+    '<div>40° 42′ 22″ N 73° 58′ 43″ W</div><button>Add name...</button>'
+  );
 });
 
 QUnit.test('featureInfo (no feature)', function(assert){
