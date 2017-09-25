@@ -1450,6 +1450,9 @@ QUnit.test('featureInfo (no feature)', function(assert){
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
+	navaid.draw.active = function(){
+		return false;
+	};
   navaid.infoHtml = function(feature){
     assert.ok(false);
   };
@@ -1475,6 +1478,9 @@ QUnit.test('featureInfo (has feature)', function(assert){
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
+	navaid.draw.active = function(){
+		return false;
+	};
   navaid.infoHtml = function(feature){
     assert.equal(feature, 'mock-feature');
     return 'mock-html';
@@ -1482,6 +1488,32 @@ QUnit.test('featureInfo (has feature)', function(assert){
   navaid.popup.show = function(options){
     assert.equal(options.html, 'mock-html');
     assert.equal(options.coordinates, 'mock-coordinate');
+  };
+
+  navaid.featureInfo({pixel: 'mock-pixel'});
+});
+
+QUnit.test('featureInfo (drawing active)', function(assert){
+  assert.expect(0);
+
+  this.TEST_MAP.forEachFeatureAtPixel = function(pix, fn){
+		assert.ok(false);
+  };
+
+  this.TEST_MAP.getCoordinateFromPixel = function(pix){
+		assert.ok(false);
+  };
+
+  var navaid = new tk.NavAid({map: this.TEST_MAP});
+
+	navaid.draw.active = function(){
+		return true;
+	};
+  navaid.infoHtml = function(feature){
+    assert.ok(false);
+  };
+  navaid.popup.show = function(options){
+		assert.ok(false);
   };
 
   navaid.featureInfo({pixel: 'mock-pixel'});
