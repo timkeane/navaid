@@ -528,6 +528,7 @@ QUnit.test('avgSpeed', function(assert){
   assert.expect(4);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
+	navaid.speedsBuffer = 10;
 
   var speed = 14;
   navaid.getSpeed = function(){
