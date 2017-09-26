@@ -25,18 +25,26 @@
 	<script src="/nyc-lib/src/main/js/nyc/ol/tracker.js"></script>
 	<script src="../../../main/webapp/js/navaid.js"></script>
 	<script src="js/mock-tracker.js"></script>
-
 	<style>
-		.load-data.ui-btn {
+		#simulate {
+			position: fixed;
+			left: 0;
+			top: 25px;
+			width: 230px;
+			height: 150px;
 			color: #fff;
-			background-color: rgba(51,136,204,.8);
-			margin: 100px auto;
-			width: 200px;
+			font-weight: bold;
+			background-image: url(img/arrow.svg);
+			background-size: 270px;
+			background-repeat: no-repeat;
+			padding: 31px 20px;
+			font-size: 22px;
+			text-align: center;
+			transform: rotate(30deg);
+			-webkit-transform: rotate(30deg);
+			-ms-transform: rotate(30deg);
 		}
-		.load-data.ui-btn:hover {
-			background-color: #38c;
-			color: #fff;
-		}
+	nyc-ol-redline-lib.css:1
 	</style>
 </head>
 <body>
@@ -52,12 +60,12 @@
 						zoom: 8,
 						center: [-8178732, 4962492]
 					})
-				})
-			})
+				}),
+				startingZoomLevel: 10
+			});
+			$('button.simulate').append($('audio'));
 		});
 	</script>
-	<button class="load-data" data-role="button" onclick="navaid.loadMockData();">
-		Load simulation data
-	</button>
+	<div id="simulate">Click to begin simulation</div>
 </body>
 </html>
