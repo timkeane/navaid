@@ -231,18 +231,18 @@ QUnit.test('navLayer', function(assert){
   assert.ok(nav.getSource() instanceof ol.source.Vector);
   assert.ok(nav.getSource() === navaid.navSource);
   assert.equal(nav.getStyle().length, 2);
-  assert.equal(nav.getStyle()[0].getStroke().getColor(), 'yellow');
-  assert.equal(nav.getStyle()[0].getStroke().getWidth(), 6);
+  assert.equal(nav.getStyle()[0].getStroke().getColor(), 'red');
+  assert.equal(nav.getStyle()[0].getStroke().getWidth(), 7);
   assert.notOk(nav.getStyle()[0].getFill());
   assert.notOk(nav.getStyle()[0].getImage());
-  assert.equal(nav.getStyle()[1].getStroke().getColor(), 'red');
-  assert.equal(nav.getStyle()[1].getStroke().getWidth(), 4);
+  assert.equal(nav.getStyle()[1].getStroke().getColor(), 'yellow');
+  assert.equal(nav.getStyle()[1].getStroke().getWidth(), 3);
   assert.notOk(nav.getStyle()[1].getFill());
   assert.notOk(nav.getStyle()[1].getImage());
 });
 
 QUnit.test('setupControls (called by constructor)', function(assert){
-  assert.expect(18);
+  assert.expect(19);
 
   var navaid;
 
@@ -605,15 +605,18 @@ QUnit.test('heading', function(assert){
 });
 
 QUnit.test('checkCourse', function(assert){
-  assert.expect(6);
+  assert.expect(8);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
-  navaid.offCourse = 20;
+	navaid.offCourse = 20;
+	navaid.metersOff = 50;
 
-  var navFeature = new ol.Feature({
-    geometry: new ol.geom.LineString([[0, 0], [0, 3]])
-  });
+	var navGeom = new ol.geom.LineString([[0, 0], [0, 100]]);
+	navGeom.getLength = function(){
+		return 40;
+	};
+  var navFeature = new ol.Feature({geometry: navGeom});
 
   navaid.heading = function(){assert.ok(false);};
   navaid.warnOn = function(){assert.ok(false);};
@@ -633,12 +636,21 @@ QUnit.test('checkCourse', function(assert){
 
   navaid.heading = function(line){
     assert.ok(line === navFeature.getGeometry());
-    return 31;
+    return 40;
   };
-  navaid.warnOn = function(){assert.ok(true);};
-  navaid.warnOff = function(){assert.ok(false);};
+  navaid.warnOn = function(){assert.ok(false);};
+	navaid.warnOff = function(){assert.ok(true);};
 
   navaid.checkCourse(navFeature, 5, 10);
+
+	navGeom.getLength = function(){
+		return 60;
+	};
+
+	navaid.warnOn = function(){assert.ok(true);};
+	navaid.warnOff = function(){assert.ok(false);};
+
+	navaid.checkCourse(navFeature, 5, 10);
 });
 
 QUnit.test('warnOff', function(assert){
@@ -1245,7 +1257,7 @@ QUnit.test('showNavigation/addNavChoices', function(assert){
 });
 
 QUnit.test('navSettings (firstLaunch)', function(assert){
-  assert.expect(12);
+  assert.expect(13);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
@@ -1260,7 +1272,8 @@ QUnit.test('navSettings (firstLaunch)', function(assert){
 
   assert.ok(navaid.warnIcon);
   assert.ok(navaid.warnAlarm);
-  assert.equal(navaid.offCourse, 20);
+	assert.equal(navaid.degreesOff, 20);
+	assert.equal(navaid.metersOff, 50);
   assert.equal(stored[0][0], navaid.iconStore);
   assert.ok(stored[0][1]);
   assert.equal(stored[1][0], navaid.alarmStore);
@@ -1273,7 +1286,7 @@ QUnit.test('navSettings (firstLaunch)', function(assert){
 });
 
 QUnit.test('navSettings (from storage)', function(assert){
-  assert.expect(6);
+  assert.expect(7);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
@@ -1283,20 +1296,22 @@ QUnit.test('navSettings (from storage)', function(assert){
     if (key == navaid.iconStore) return 'true';
     if (key == navaid.alarmStore) return 'false';
     if (key == navaid.degreesStore) return '25';
+		if (key == navaid.metersStore) return '100';
   };
 
   navaid.navSettings();
 
   assert.ok(navaid.warnIcon);
   assert.notOk(navaid.warnAlarm);
-  assert.equal(navaid.offCourse, 25);
+	assert.equal(navaid.degreesOff, 25);
+	assert.equal(navaid.metersOff, 100);
   assert.ok($('#off-course-icon').is(':checked'));
   assert.notOk($('#off-course-alarm').is(':checked'));
   assert.equal($('#off-course-degrees').val(), 25);
 });
 
 QUnit.test('navSettings (from input)', function(assert){
-  assert.expect(9);
+  assert.expect(12);
 
   var navaid = new tk.NavAid({map: this.TEST_MAP});
 
@@ -1304,11 +1319,13 @@ QUnit.test('navSettings (from input)', function(assert){
 
   navaid.warnIcon = true;
   navaid.warnAlarm = false;
-  navaid.offCourse = 20;
+	navaid.degreesOff = 20;
+  navaid.metersOff = 50;
 
   $('#off-course-icon').prop('checked', false);
   $('#off-course-alarm').prop('checked', true);
-  $('#off-course-degrees').val(25);
+	$('#off-course-degrees').val(25);
+	$('#off-course-meters').val(60);
 
   var stored = [];
   navaid.storage.setItem = function(key, item){
@@ -1319,13 +1336,16 @@ QUnit.test('navSettings (from input)', function(assert){
 
   assert.notOk(navaid.warnIcon);
   assert.ok(navaid.warnAlarm);
-  assert.equal(navaid.offCourse, 25);
+	assert.equal(navaid.degreesOff, 25);
+	assert.equal(navaid.metersOff, 60);
   assert.equal(stored[0][0], navaid.iconStore);
   assert.notOk(stored[0][1]);
   assert.equal(stored[1][0], navaid.alarmStore);
   assert.ok(stored[1][1]);
-  assert.equal(stored[2][0], navaid.degreesStore);
+	assert.equal(stored[2][0], navaid.degreesStore);
   assert.equal(stored[2][1], '25');
+	assert.equal(stored[3][0], navaid.metersStore);
+  assert.equal(stored[3][1], '60');
 });
 
 QUnit.test('center', function(assert){
@@ -1467,12 +1487,12 @@ QUnit.test('featureInfo (has feature)', function(assert){
   assert.expect(5);
 
   this.TEST_MAP.forEachFeatureAtPixel = function(pix, fn){
-    assert.equal(pix, 'mock-pixel');
-    return 'mock-feature';
+    assert.equal(pix, 'mock-pixel', 'forEachFeatureAtPixel');
+    fn('mock-feature');
   };
 
   this.TEST_MAP.getCoordinateFromPixel = function(pix){
-    assert.equal(pix, 'mock-pixel');
+    assert.equal(pix, 'mock-pixel', 'getCoordinateFromPixel');
     return 'mock-coordinate';
   };
 
@@ -1482,12 +1502,12 @@ QUnit.test('featureInfo (has feature)', function(assert){
 		return false;
 	};
   navaid.infoHtml = function(feature){
-    assert.equal(feature, 'mock-feature');
+    assert.equal(feature, 'mock-feature', 'infoHtml');
     return 'mock-html';
   };
   navaid.popup.show = function(options){
-    assert.equal(options.html, 'mock-html');
-    assert.equal(options.coordinates, 'mock-coordinate');
+    assert.equal(options.html, 'mock-html', 'popup html');
+    assert.equal(options.coordinates, 'mock-coordinate', 'popup coordinates');
   };
 
   navaid.featureInfo({pixel: 'mock-pixel'});

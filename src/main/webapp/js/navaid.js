@@ -439,14 +439,14 @@ tk.NavAid.prototype = {
   /**
    * @private
    * @method
-   * @param {ol.Feature} feature
+   * @param {ol.Feature} navFeature
    * @param {number} speed
    * @param {number} heading
    */
-  checkCourse: function(feature, speed, heading){
-    if (feature && speed){
-      var distance = this.navFeature.getGeometry().getLength();
-      var courseHeading = this.heading(feature.getGeometry());
+  checkCourse: function(navFeature, speed, heading){
+    if (navFeature && speed){
+      var distance = navFeature.getGeometry().getLength();
+      var courseHeading = this.heading(navFeature.getGeometry());
       if (distance > this.metersOff && Math.abs(courseHeading - heading) > this.degreesOff){
         this.warnOn();
       }else{
@@ -735,12 +735,15 @@ tk.NavAid.prototype = {
    * @param {ol.MapBrowserEvent} event
    */
   featureInfo: function(event){
-    var map = this.map, pix = event.pixel, drawing = this.draw.active(), feature;
-    map.forEachFeatureAtPixel(pix, function(feat){
-      if (!drawing || name){
-        feature = feat;
-      }
-    });
+    var map = this.map,
+      pix = event.pixel,
+      drawing = this.draw.active(),
+      feature;
+    if (!drawing){
+      map.forEachFeatureAtPixel(pix, function(feat){
+          feature = feat;
+      });
+    }
     if (feature){
       var html = this.infoHtml(feature);
       if (html){
