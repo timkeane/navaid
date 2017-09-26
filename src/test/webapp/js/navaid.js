@@ -274,7 +274,7 @@ QUnit.test('setupControls (called by constructor)', function(assert){
   assert.equal($('.draw-btn-mnu .square, .draw-btn-mnu .box, .draw-btn-mnu .gps, .draw-btn-mnu .save, .draw-btn-mnu .delete').length, 0);
   assert.ok(navaid.waypointBtn.hasClass('waypoint'));
 
-  assert.ok(navaid.navBtn.hasClass('nav'));
+  assert.ok(navaid.navBtn.hasClass('nav-btn'));
   navaid.navBtn.trigger('click');
 
   assert.equal($('.nav-dash').length, 1);
