@@ -631,6 +631,7 @@ tk.NavAid.prototype = {
       this.storage.setItem(this.iconStore, this.warnIcon);
       this.storage.setItem(this.alarmStore, this.warnAlarm);
       this.storage.setItem(this.degreesStore, this.degreesOff);
+      this.storage.setItem(this.metersStore, this.metersOff);
     }else if(this.firstLaunch){
       this.warnIcon = true;
       this.warnAlarm = true;
@@ -639,6 +640,7 @@ tk.NavAid.prototype = {
       this.storage.setItem(this.iconStore, true);
       this.storage.setItem(this.alarmStore, true);
       this.storage.setItem(this.degreesStore, 20);
+      this.storage.setItem(this.metersStore, 50);
       $('#off-course-icon').prop('checked', this.warnIcon);
       $('#off-course-alarm').prop('checked', this.warnAlarm);
       $('#off-course-degrees').val(this.degreesOff);
@@ -733,19 +735,19 @@ tk.NavAid.prototype = {
    * @param {ol.MapBrowserEvent} event
    */
   featureInfo: function(event){
-    if (!this.draw.active()){
-      var map = this.map, pix = event.pixel;
-      var feature = map.forEachFeatureAtPixel(pix, function(feature){
-        return feature;
-      });
-      if (feature){
-        var html = this.infoHtml(feature);
-        if (html){
-          this.popup.show({
-            html: html,
-            coordinates: map.getCoordinateFromPixel(pix)
-          });
-        }
+    var map = this.map, pix = event.pixel, drawing = this.draw.active(), feature;
+    map.forEachFeatureAtPixel(pix, function(feat){
+      if (!drawing || name){
+        feature = feat;
+      }
+    });
+    if (feature){
+      var html = this.infoHtml(feature);
+      if (html){
+        this.popup.show({
+          html: html,
+          coordinates: map.getCoordinateFromPixel(pix)
+        });
       }
     }
   },
